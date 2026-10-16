@@ -1,0 +1,10 @@
+{
+  "name": "ashline-online",
+  "version": "1.2.0",
+  "private": true,
+  "description": "ASHLINE BLACK CELL room-based multiplayer prototype with Greyfield map",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "express": "^4.21.2", "ws": "^8.18.0" }
+}
