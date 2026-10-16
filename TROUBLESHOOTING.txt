@@ -1,0 +1,29 @@
+ASHLINE: BLACK CELL — Troubleshooting
+======================================
+
+BLANK / BLACK SCREEN
+- Refresh the page once.
+- Confirm the browser is online; the page imports Three.js from jsDelivr.
+- Press F12, open Console, refresh, and copy the first red error message.
+- If you see "THREE is not defined" or a script-loading/network error,
+  the external Three.js library did not load.
+
+GITHUB PAGES SHOWS 404
+- Confirm index.html is in the repository root, not inside an extra folder.
+- Confirm Settings -> Pages is enabled for branch main and folder / (root).
+- Wait a little after saving Pages settings.
+
+GAME DOES NOT START
+- Open the published GitHub Pages URL, not the repository's Code page.
+- If a Start button is present, click it once.
+- If the page still fails, provide the exact first red Console error.
+  The error message is needed to identify the actual cause.
+
+MOVEMENT / CONTROLS NOT WORKING
+- Click the game area first so the page has keyboard focus.
+- Check the on-screen controls/help text.
+
+NOTE
+----
+These notes do not modify or repair the game logic. They help identify setup
+and loading problems. The HTML file is preserved unchanged in this ZIP.
