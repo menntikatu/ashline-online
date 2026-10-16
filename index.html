@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASHLINE: BLACK CELL — Learning District Update</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080d12;color:#e8f0f4;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}canvas{display:block}#hud{position:fixed;inset:0;pointer-events:none;text-shadow:0 2px 5px #000}#top{position:absolute;top:18px;left:20px;right:20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.panel{background:linear-gradient(135deg,rgba(9,19,26,.86),rgba(16,28,34,.58));border:1px solid rgba(145,190,205,.3);padding:12px 15px;backdrop-filter:blur(5px);box-shadow:0 8px 28px #0005}.eyebrow{font-size:10px;letter-spacing:.22em;color:#79d8df}.big{font-size:22px;font-weight:800;letter-spacing:.08em}.small{font-size:12px;color:#b7c7ce}.meter{height:6px;background:#26333a;width:180px;margin-top:7px}.meter span{display:block;height:100%;width:100%;background:#79e0d1;transition:width .15s}.right{text-align:right}.right .meter{margin-left:auto}.ammo{font-size:29px;font-weight:800;letter-spacing:.06em}.ammo small{font-size:13px;color:#a6bac3}.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center}.cross{width:20px;height:20px;position:relative;opacity:.9}.cross:before,.cross:after{content:"";position:absolute;background:#dffcff;box-shadow:0 0 6px #66e9ff}.cross:before{width:2px;height:18px;left:9px;top:1px}.cross:after{height:2px;width:18px;left:1px;top:9px}body.aiming .cross{transform:scale(1);width:26px;height:26px;border:1px solid rgba(255,60,65,.95);border-radius:50%;box-shadow:0 0 7px rgba(255,35,45,.75)}body.aiming .cross:before{width:4px;height:4px;left:10px;top:10px;border-radius:50%;background:#ff2835;box-shadow:0 0 8px #ff2835}body.aiming .cross:after{height:1px;width:34px;left:-5px;top:12px;background:#ff3843;box-shadow:0 0 5px #ff3843}#hint{position:absolute;bottom:25px;left:50%;transform:translateX(-50%);padding:9px 14px;background:#091219bb;border:1px solid #78909a55;font-size:12px;white-space:nowrap}#message{position:absolute;top:25%;left:50%;transform:translateX(-50%);font-weight:800;letter-spacing:.18em;font-size:clamp(16px,3vw,28px);color:#d8f8ff;text-align:center;opacity:0;transition:opacity .25s}#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#15242dcc,#05090ef2);z-index:5;padding:20px}#card{width:min(600px,100%);border:1px solid #86b8c855;background:linear-gradient(145deg,#101c25f5,#080f16f5);padding:clamp(22px,5vw,42px);box-shadow:0 25px 90px #000a}h1{font-size:clamp(30px,6vw,54px);line-height:.95;margin:12px 0 18px;letter-spacing:.05em}h1 span{color:#72e0e7}.line{height:1px;background:linear-gradient(90deg,#78e1e7,transparent);margin:22px 0}.desc{color:#bdcbd1;line-height:1.8;font-size:14px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px;font-size:12px;color:#b8c9d0}.controls b{color:#fff;display:inline-block;min-width:82px}.btn{margin-top:25px;border:0;background:#8de7e8;color:#071116;font-size:14px;font-weight:900;letter-spacing:.1em;padding:14px 22px;cursor:pointer;width:100%}.btn:hover{background:#c3ffff}#damage{position:fixed;inset:0;pointer-events:none;background:rgba(255,45,30,0);transition:background .08s}#toast{position:fixed;left:50%;top:18%;transform:translateX(-50%);font-size:13px;letter-spacing:.12em;color:#d7fbff;background:#07131dcc;border:1px solid #77dce355;padding:9px 14px;opacity:0;pointer-events:none;transition:opacity .2s}#mini{position:fixed;right:18px;top:125px;width:150px;height:150px;border:1px solid #8bb8bf66;background:#081219b8;pointer-events:none}#statusline{position:fixed;left:20px;bottom:70px;font:11px ui-monospace,monospace;color:#d7e8e9;text-shadow:0 1px 4px #000}
+
+#rec{position:fixed;top:22px;left:50%;transform:translateX(-50%);font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.16em;color:#f0f0e8;text-shadow:0 1px 4px #000;pointer-events:none;opacity:.82}
+.rec-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4b40;margin-right:7px;box-shadow:0 0 7px #f44}
+.rec-label{margin-left:14px;color:#c8d0d0}
+#bodycam-vignette{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at center,transparent 48%,rgba(0,0,0,.17) 78%,rgba(0,0,0,.52) 130%);mix-blend-mode:multiply}
+#bodycam-grain{position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.07;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.14) 0px,rgba(255,255,255,.14) 1px,transparent 1px,transparent 3px);background-size:100% 4px}
+.map-choices{display:grid;grid-template-columns:1fr;gap:10px;margin-top:18px}#mapSki{display:block}.map-choice{position:relative;text-align:left;min-height:78px;padding:14px 12px 12px 42px;border:1px solid #6b879166;background:#101a22;color:#dce9ef;cursor:pointer;font:inherit}.map-choice strong{display:block;font-size:12px;letter-spacing:.06em}.map-choice small{display:block;margin-top:9px;color:#a9bbc5;font-size:11px;line-height:1.5}.map-choice.selected{border-color:#8de7e8;background:linear-gradient(135deg,#1a353b,#101a22);box-shadow:inset 0 0 0 1px #8de7e855}.map-number{position:absolute;left:12px;top:14px;font-size:11px;color:#8de7e8;font-weight:900}@media(max-width:520px){.map-choices{grid-template-columns:1fr}.map-choice{min-height:80px}}
+#nvg-overlay{display:none;position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at center,rgba(90,255,130,.08) 0%,rgba(24,110,50,.24) 65%,rgba(0,35,12,.58) 100%);mix-blend-mode:screen}
+body.nvg #nvg-overlay{display:block}
+body.nvg canvas{filter:brightness(1.45) sepia(.15) hue-rotate(55deg) saturate(1.45)}
+#gear-status{position:fixed;right:20px;bottom:18px;z-index:4;text-align:right;font:700 11px/1.7 ui-monospace,monospace;letter-spacing:.08em;color:#b9f8d0;text-shadow:0 1px 5px #000;pointer-events:none}
+body.aiming #bodycam-vignette{background:radial-gradient(ellipse at center,transparent 36%,rgba(0,0,0,.2) 66%,rgba(0,0,0,.6) 130%)}
+/* Keep the HUD readable above the night-vision tint and bodycam effects. */
+#hud{z-index:5}#mini{z-index:6}#statusline{z-index:6}#rec{z-index:6}#gear-status{z-index:7}#toast{z-index:8}#damage{z-index:9}
+#nvg-overlay{z-index:1;background:radial-gradient(ellipse at center,rgba(120,255,155,.025) 0%,rgba(65,160,85,.09) 66%,rgba(0,18,7,.62) 100%);mix-blend-mode:screen}
+body.nvg #nvg-overlay{background:radial-gradient(ellipse at center,rgba(120,255,155,.025) 0%,rgba(65,160,85,.08) 62%,rgba(0,18,7,.30) 100%),repeating-linear-gradient(0deg,rgba(180,255,190,.045) 0px,rgba(180,255,190,.045) 1px,transparent 1px,transparent 3px);opacity:.72}
+/* Image-intensifier look: monochrome phosphor, fine scintillation and a darker optical edge. */
+body.nvg canvas:not(#mini){filter:grayscale(1) sepia(.78) hue-rotate(58deg) saturate(2.05) brightness(4.0) contrast(1.04)}
+body.nvg #bodycam-grain{opacity:.17;background-image:repeating-linear-gradient(0deg,rgba(190,255,200,.22) 0px,rgba(190,255,200,.22) 1px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,rgba(100,255,140,.035) 0px,rgba(100,255,140,.035) 1px,transparent 1px,transparent 4px)}
+#gear-status .battery-track{display:inline-block;width:95px;height:7px;margin-left:5px;background:#23382c;border:1px solid #9bc8a8;vertical-align:middle}
+#gear-status .battery-fill{display:block;height:100%;width:100%;background:#7cff9d;transition:width .2s}
+body.nvg #gear-status{color:#caffd3}
+
+#overlay{overflow-y:auto;align-items:flex-start}#card{margin:auto}.map-choice small{margin-top:5px}
+#scope{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .15s;background:radial-gradient(circle at center,rgba(0,0,0,0) 0,rgba(0,0,0,0) 16%,rgba(0,0,0,.6) 40%,rgba(0,0,0,.96) 68%)}#scope::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#ff2535;box-shadow:0 0 10px 3px rgba(255,37,53,.8)}body.aiming #scope{opacity:1}body.aiming #cross{opacity:0}
+body.kcam::before,body.kcam::after{content:'';position:fixed;left:0;right:0;height:12vh;background:#000;z-index:7}body.kcam::before{top:0}body.kcam::after{bottom:0}
+body.kcam #hud{opacity:0;transition:opacity .2s}body.kcam #scope{opacity:1}body.kcam #scope::after{display:none}
+</style>
+</head>
+<body>
+<div id="hud" hidden>
+ <div id="top">
+  <div class="panel"><div class="eyebrow">ASHLINE // BLACK CELL FIELD STATUS</div><div class="big">SECTOR 04 — SHIBUYA: OUTER DISTRICT</div><div class="small" id="objective">OBJECTIVE: REACH THE RIDGELINE — 30s TO MORTAR BARRAGE</div><div style="font-size:11px;margin-top:10px">VITALS <span id="hpText">100</span>%</div><div class="meter"><span id="hpBar"></span></div></div>
+  <div class="panel right"><div class="eyebrow">PRIMARY // HIGH-POWER CARBINE</div><div class="ammo"><span id="mag">30</span> <small>/ <span id="reserve">120</span></small></div><div class="small" id="weaponState">BURST/AUTO • ENHANCED LOAD</div><div class="small" style="margin-top:8px">HOSTILES <b id="enemyCount">0</b></div><div class="small">MEDKITS <b id="medkitCount">5</b>　[G] 使用</div></div>
+ </div>
+ <div class="center"><div class="cross" id="cross"></div></div>
+ <div id="message"></div><div id="hint">WASD 移動　｜　マウス 視点　｜　左クリック 射撃　｜　R リロード　｜　Shift ダッシュ　｜　Z しゃがみ　｜　T 照準　｜　Y ライト／レーザー　｜　G 回復アイテム　｜　H 暗視ゴーグル　｜　Esc 一時停止</div>
+</div>
+<div id="scope"></div><div id="damage"></div><div id="toast"></div><div id="nvg-overlay"></div><div id="gear-status">LIGHT / LASER: OFF<br>NVG: OFF</div><canvas id="mini" width="150" height="150"></canvas><div id="statusline">RADIO: BLACK ICE // WIND WARNING</div><div id="rec"><span class="rec-dot"></span> REC <span id="recTime">00:00</span><span class="rec-label">CAM-02 / FIELD UNIT</span></div><div id="bodycam-vignette"></div><div id="bodycam-grain"></div>
+<div id="overlay"><div id="card"><div class="eyebrow">BODYCAM FIELD RECORDING // 2049</div><h1>ASHLINE:<br><span>BLACK CELL</span></h1><div class="desc">渋谷の裏路地、または新規のドックサイド・コンテナヤードを選択。マップを選んで「部屋を作る」を押すと待機画面になります。友達は部屋番号で参加できます。一人で遊ぶときはマップを選んで緑の「ソロ出撃」を押してね。【クリア条件】マップに隠された機密資料（黄色い光柱）を3つ回収し、最後に現れる青い脱出ビーコンへ到達。最後の資料を取ると敵が警戒します。</div><div class="map-choices"><button class="map-choice" id="mapShibuya"><span class="map-number">01</span><strong>SHIBUYA BACKSTREETS</strong><small>ネオン路地、商店街、外周道路、廃車、遮蔽物</small></button><button class="map-choice" id="mapIndustrial" type="button"><span class="map-number">02</span><strong>DOCKSIDE CONTAINER YARD</strong><small>新規マップ：コンテナ迷路、倉庫、積み荷置き場、広い迂回路</small></button><button class="map-choice" id="mapSki"><span class="map-number">03</span><strong>GREYFIELD RUINED VILLAGE</strong><small>半壊した集落、中央広場、路地、農場外周、迂回ルート。遮蔽物と見通しのバランスを重視。</small></button><button class="map-choice" id="mapCanyon" type="button"><span class="map-number">04</span><strong>REDRIDGE CANYON</strong><small>高低差の激しい断崖地帯。尾根の狙撃手、谷底の遮蔽、丘越えの接近戦。</small></button><button class="map-choice" id="mapForest" type="button"><span class="map-number">05</span><strong>BLACKWOOD FOREST</strong><small>月明かりの夜の森。木々の間の待ち伏せ。暗視ゴーグル(N)と戦術スキャン(Q)が活きる。</small></button></div><button class="btn" id="soloStart" style="margin-top:14px;background:linear-gradient(110deg,#1f6b54,#36b889);">ソロ出撃（AI敵あり）— Enterキーでも開始</button><div class="line"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0"><input id="roomCode" maxlength="6" placeholder="部屋番号" inputmode="numeric" style="min-width:0;background:#071119;border:1px solid #52727d;color:#eafaff;padding:12px;font:inherit"><button id="createRoom" class="map-choice" style="min-height:0;padding:12px;text-align:center">部屋を作る</button><button id="joinRoom" class="map-choice" style="min-height:0;padding:12px;text-align:center;grid-column:1 / -1">番号で参加</button></div><div class="small" id="netStatus" style="margin:8px 0;color:#8de7e8">部屋を作ると待機画面になります。友達を待つか、一人なら「プレイ開始」を押してね。</div><div class="line"></div><div class="controls"><div><b>W A S D</b> 移動</div><div><b>マウス</b> 視点操作</div><div><b>左クリック</b> 射撃（自動連射）</div><div><b>R</b> リロード</div><div><b>Shift</b> ダッシュ</div><div><b>Z</b> しゃがみ／立つ</div><div><b>T</b> 照準をのぞき込む</div><div><b>Y</b> 懐中電灯＋赤色レーザー ON/OFF</div><div><b>G</b> 回復アイテム使用（初期5個）</div><div><b>H</b> 暗視ゴーグル ON/OFF</div><div><b>1 / 2 / 3</b> ライフル／ナイフ／手榴弾</div><div><b>Shift+移動 → Ctrl(またはC)</b> スライディング</div><div><b>Q</b> 戦術スキャン（敵位置を7秒表示／CD28秒）</div><div><b>Esc</b> 一時停止</div></div><button class="btn" id="start" style="margin-top:8px;background:linear-gradient(110deg,#28516b,#287e9b);">対人戦を開始</button><div class="small" style="margin-top:12px" id="mapNote">新規マップ：既存の路地から外周商店街・大通り・サービスヤードへ接続。敵AIはプレイヤーの射撃頻度、ダッシュ、しゃがみ、移動方向を観察して行動を適応させる。3D表示にはインターネット接続が必要です。オンライン対人戦はこの単体HTMLだけでは接続できません。</div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(()=>{
+if(!window.THREE){const m='3Dライブラリ(three.js)を読み込めません。インターネット接続を確認して再読み込みしてね。';document.getElementById('netStatus').textContent=m;document.getElementById('soloStart').onclick=()=>alert(m);return;}
+const $=id=>document.getElementById(id);let scene,camera,renderer,clock,started=false,dead=false,paused=false;let selectedMap='village',currentMap='village';
+let net=null,netRoom='',netId='',netRole='',netConnected=false,peerPresent=false,lastNetSend=0,remotePlayers=new Map();
+let yaw=0,pitch=0,hp=100,ammo=30,reserve=120,medkits=5,reloading=false,shooting=false,lastShot=0,lastEnemyShot=0,damageFlash=0,toastTimer=0,crouched=false,aiming=false,combatStarted=false,flashlightOn=false,nvgOn=false,nvgBattery=150,nvgLocked=false,hemiLight=null,flashSpot=null,flashFill=null,laserLine=null,laserMaterial=null,viewWeapon=null;
+const keys={},enemies=[],obstacles=[],tracers=[],particles=[],pickups=[];
+// Adaptive director: lightweight online behavior model learns this session's habits (not a pretrained neural network).
+const playerProfile={shots:0,sprint:0,crouch:0,moveX:0,moveZ:0,samples:0,aggression:.5,flank:.35,search:.5};let recoil=0,weaponKick=0,shotShake=0,learnTimer=0;let missionElapsed=0,combatElapsed=0,kills=0,shotsFired=0,mortarStarted=false,nextMortarTime=30;const mortarShells=[],explosions=[],snowDrift=[];const raycaster=new THREE.Raycaster();const forward=new THREE.Vector3();
+const mat=(color,rough=.9,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+// Procedural field-uniform texture: high-detail woodland camouflage and fabric grain.
+const camoCanvas=document.createElement('canvas');camoCanvas.width=256;camoCanvas.height=256;const cx=camoCanvas.getContext('2d');
+cx.fillStyle='#50594b';cx.fillRect(0,0,256,256);
+const camoColors=['#29352d','#354237','#59634c','#74735a','#41483c','#626b55','#343d34'];
+for(let i=0;i<760;i++){cx.fillStyle=camoColors[Math.floor(Math.random()*camoColors.length)];cx.beginPath();cx.ellipse(Math.random()*256,Math.random()*256,3+Math.random()*15,2+Math.random()*8,Math.random()*Math.PI,0,Math.PI*2);cx.fill();}
+for(let i=0;i<3600;i++){cx.fillStyle=Math.random()>.5?'rgba(210,214,190,.10)':'rgba(5,12,8,.17)';cx.fillRect(Math.random()*256,Math.random()*256,1,1+Math.random()*4);}
+cx.strokeStyle='rgba(215,220,197,.24)';cx.lineWidth=1;cx.beginPath();for(let y of [36,92,148,204]){cx.moveTo(0,y);cx.lineTo(256,y);}cx.stroke();
+const camoTex=new THREE.CanvasTexture(camoCanvas);camoTex.wrapS=camoTex.wrapT=THREE.RepeatWrapping;camoTex.repeat.set(2,2);camoTex.colorSpace=THREE.SRGBColorSpace;
+const uniformMat=new THREE.MeshStandardMaterial({map:camoTex,color:0xb8b9a5,roughness:1});
+const vestCanvas=document.createElement('canvas');vestCanvas.width=128;vestCanvas.height=128;const vx=vestCanvas.getContext('2d');vx.fillStyle='#252d2a';vx.fillRect(0,0,128,128);
+for(let i=0;i<1100;i++){vx.fillStyle=Math.random()>.5?'rgba(155,166,143,.10)':'rgba(0,0,0,.16)';vx.fillRect(Math.random()*128,Math.random()*128,1,1+Math.random()*5);}
+for(let y=12;y<128;y+=20){vx.fillStyle='rgba(5,10,8,.38)';vx.fillRect(0,y,128,3);for(let x=8;x<128;x+=16){vx.fillStyle='rgba(170,177,153,.20)';vx.fillRect(x,y+4,2,9);}}
+const vestTex=new THREE.CanvasTexture(vestCanvas);vestTex.wrapS=vestTex.wrapT=THREE.RepeatWrapping;vestTex.colorSpace=THREE.SRGBColorSpace;
+const vestMat=new THREE.MeshStandardMaterial({map:vestTex,color:0xffffff,roughness:1});
+const helmetCanvas=document.createElement('canvas');helmetCanvas.width=128;helmetCanvas.height=128;const hx=helmetCanvas.getContext('2d');hx.fillStyle='#303936';hx.fillRect(0,0,128,128);
+for(let i=0;i<900;i++){hx.fillStyle=Math.random()>.5?'rgba(180,190,170,.09)':'rgba(0,0,0,.18)';hx.fillRect(Math.random()*128,Math.random()*128,1+Math.random()*2,1+Math.random()*3);}
+hx.strokeStyle='rgba(190,198,178,.22)';hx.lineWidth=2;hx.strokeRect(8,8,112,112);
+const helmetTex=new THREE.CanvasTexture(helmetCanvas);helmetTex.colorSpace=THREE.SRGBColorSpace;
+const helmetMat=new THREE.MeshStandardMaterial({map:helmetTex,color:0xffffff,roughness:.88,metalness:.04}),skinMat=mat(0x5c5b52,1),eliteMat=mat(0x171e20,.85,.25);
+const mats={concrete:mat(0x414b4e),dark:mat(0x202a2e),brick:mat(0x574844),metal:mat(0x35464b,.55,.55),glass:mat(0x233e47,.25,.6),sand:mat(0x625e50),enemy:uniformMat,visor:mat(0xff604a,.3,.3),crate:mat(0x4b554e),road:mat(0x20282b)};
+function box(x,y,z,sx,sy,sz,material,collide=true){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);if(collide)obstacles.push({x,z,hx:sx/2,hz:sz/2,top:y+sy/2,bottom:y-sy/2,obj:m});return m}
+function building(x,z,w,d,h,broken=false){box(x,h/2,z,w,h,d,mats.concrete); // dark window recesses
+ for(let yy=2.1;yy<h-1;yy+=2.6)for(let xx=-w/2+1.3;xx<w/2-0.5;xx+=2.8){if(Math.random()<.23)continue;const win=box(x+xx,yy,z-d/2-.012,1.25,1.05,.035,mats.glass,false);win.castShadow=false;}
+ // exposed floors / roof debris
+ if(broken){for(let i=0;i<4;i++){const r=box(x+(Math.random()-.5)*w*.8,Math.max(1,h*.55)+(Math.random()-.5)*2,z+(Math.random()-.5)*d*.7,1.5+Math.random()*3,.3,1.2,mats.dark,false);r.rotation.z=(Math.random()-.5)*.4;}}
+}
+function init(mapType){currentMap=mapType;hf=null;remotePlayers.clear();scene=new THREE.Scene();scene.background=new THREE.Color(0x11191c);scene.fog=new THREE.FogExp2(0x20282b,.023);camera=new THREE.PerspectiveCamera(92,innerWidth/innerHeight,.08,600);camera.rotation.order='YXZ';camera.position.set(0,1.7,18.5);yaw=0;pitch=0;renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.0));renderer.setSize(Math.floor(innerWidth*.9),Math.floor(innerHeight*.9),false);renderer.domElement.style.width='100vw';renderer.domElement.style.height='100vh';renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);clock=new THREE.Clock();
+ // Player-mounted tactical light and a visible red laser line. Both toggle with Y.
+ flashSpot=new THREE.SpotLight(0xe4f4ff,0,38,Math.PI/5.2,0.42,1.0);flashSpot.position.set(0,0,0);flashSpot.target.position.set(0,0,-18);scene.add(flashSpot);scene.add(flashSpot.target);flashFill=new THREE.PointLight(0xdceeff,0,8,1.4);scene.add(flashFill);
+ laserMaterial=new THREE.LineBasicMaterial({color:0xff2535,transparent:true,opacity:.88,depthTest:true});const laserGeo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-1)]);laserLine=new THREE.Line(laserGeo,laserMaterial);laserLine.frustumCulled=false;laserLine.visible=false;scene.add(laserLine);
+ hemiLight=new THREE.HemisphereLight(0x53636a,0x151719,.68);scene.add(hemiLight);const sun=new THREE.DirectionalLight(0x9ba7a8,.28);sun.position.set(-18,35,12);scene.add(sun);
+ if(currentMap==='ski'){
+ // Open-air night ski resort: moonlit snow, mountain silhouettes, lift cables and scattered resort buildings.
+ scene.background=new THREE.Color(0x071326);scene.fog=new THREE.FogExp2(0x9eb8d2,.0065);
+ hemiLight.color.setHex(0x8ca9cf);hemiLight.groundColor.setHex(0x26374b);hemiLight.intensity=.95;
+ const moon=new THREE.DirectionalLight(0xa8c8ff,.85);moon.position.set(-35,55,24);scene.add(moon);
+ const snowMat=mat(0xd6e2ed,.98), packedSnow=mat(0x9eafc2,.98), icyMat=mat(0x8ca6bc,.32,.12), pineMat=mat(0x102a2b), pineSnow=mat(0xc5d5e0), woodMat=mat(0x4c4138), lodgeMat=mat(0x35424b), windowMat=new THREE.MeshStandardMaterial({color:0xf4bf70,emissive:0xff9c35,emissiveIntensity:.75,roughness:.5});
+ box(0,-.45,0,480,.9,480,snowMat,false);
+ // Gentle rolling slope banks; their low profile keeps movement open while framing the ski run.
+ for(const [x,z,w,d,h,rot] of [[-48,-42,34,70,5,-.16],[47,-25,30,85,7,.18],[-42,43,35,52,4,.22],[43,58,38,48,5,-.2]]){const hill=box(x,h/2-.15,z,w,h,d,packedSnow,false);hill.rotation.y=rot;}
+ // Distant mountain silhouettes under the open sky.
+ const mountainMat=mat(0x18283d), mountainSnow=mat(0x8299b3);
+ for(let i=0;i<25;i++){const x=-230+i*19,z=-205-Math.random()*35,r=14+Math.random()*18,h=22+Math.random()*32;const peak=new THREE.Mesh(new THREE.ConeGeometry(r,h,5),mountainMat);peak.position.set(x,h/2-1,z);peak.rotation.y=Math.random();scene.add(peak);const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.38,h*.28,5),mountainSnow);cap.position.set(x,h*.86,z+.05);cap.rotation.y=peak.rotation.y;scene.add(cap);}
+ // Night sky stars, kept lightweight as one point cloud.
+ const starPositions=[];for(let i=0;i<760;i++){const a=Math.random()*Math.PI*2, elev=.08+Math.random()*1.35, r=270;starPositions.push(Math.cos(a)*Math.cos(elev)*r,Math.sin(elev)*r+22,Math.sin(a)*Math.cos(elev)*r);}const starGeo=new THREE.BufferGeometry();starGeo.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xe0efff,size:.7,sizeAttenuation:false,transparent:true,opacity:.8})));
+ const moonDisc=new THREE.Mesh(new THREE.SphereGeometry(3.3,12,10),new THREE.MeshBasicMaterial({color:0xdceaff}));moonDisc.position.set(-48,48,-105);scene.add(moonDisc);
+ // Ski lift towers and overhead cables.
+ for(const z of [-180,-150,-120,-90,-60,-30,0,30,60,90,120,150,180]){box(-13,5,z,.45,10,.45,mats.metal,false);box(-13,9.5,z,8,.3,.35,mats.metal,false);box(-13,10.1,z,.2,.9,.2,mats.dark,false);}
+ for(let z=-185;z<190;z+=3){const cable=box(-13,9.9,z,.055,.055,3.1,mat(0x202c3a,.5,.6),false);cable.rotation.x=.015;}
+ // A small lift station and mountain lodge provide recognizable landmarks.
+ box(-22,2.1,-30,10,4.2,8,lodgeMat);const lodgeRoof=box(-22,4.45,-30,11,.55,9,woodMat,false);lodgeRoof.rotation.z=.04;
+ for(const x of [-25,-21,-17]){const win=box(x,2.3,-34.08,1.25,1.25,.08,windowMat,false);}
+ box(-22,1.15,-25.85,2.2,2.3,.3,woodMat,false);
+ // Snow-covered pine trees along the sides and scattered copses; trunks are solid, branches visual.
+ function pine(x,z,h=5){const trunk=box(x,h*.28,z,.32,h*.56,.32,woodMat);for(let j=0;j<3;j++){const r=h*(.34-j*.065),hh=h*.43;const cone=new THREE.Mesh(new THREE.ConeGeometry(r,hh,7),pineMat);cone.position.set(x,h*.28+j*h*.22,z);scene.add(cone);const snowCap=new THREE.Mesh(new THREE.ConeGeometry(r*.84,hh*.72,7),new THREE.MeshStandardMaterial({color:0xcbd9e5,roughness:1}));snowCap.position.set(x,h*.34+j*h*.22,z-.015);scene.add(snowCap);}return trunk;}
+ for(let i=0;i<66;i++){let side=Math.random()<.5?-1:1;let x=side*(15+Math.random()*35),z=-90+Math.random()*180;if(Math.abs(z-18)<10&&Math.abs(x)<23)continue;pine(x,z,4+Math.random()*5);}
+ // Snowbanks, barriers, trail markers and a few maintenance vehicles for cover.
+ for(const [x,z,w,d] of [[-6,-18,8,1.2],[7,-37,7,1.1],[-5,-57,9,1.2],[8,4,7,1.1],[-8,48,8,1.2]]){const bank=box(x,.48,z,w,.95,d,packedSnow);bank.rotation.y=(Math.random()-.5)*.12;}
+ for(const [x,z] of [[-3,-8],[3,-31],[0,-53],[-4,-74],[5,25]]){const pole=box(x,1.2,z,.12,2.4,.12,mat(0xe8edf0),false);box(x,2.1,z,.5,.35,.25,mat(0xd72d3b),false);}
+ for(const [x,z,rot] of [[6,-14,.1],[-7,-43,-.2],[5,42,.15]]){const car=box(x,.65,z,2.1,1.1,3.8,mat(0x2a343d));car.rotation.y=rot;}
+ // Small lit trail hut on the side, with open approach rather than a spawn enclosure.
+ box(22,1.5,38,6,3,5,woodMat);box(22,3.15,38,6.6,.45,5.6,mats.dark,false);box(22,1.75,35.44,1.3,1.1,.06,windowMat,false);
+ // Gentle snowfall as a single point cloud; particles loop around the player.
+ const snowPositions=[];for(let i=0;i<320;i++)snowPositions.push((Math.random()-.5)*190,Math.random()*24-2,(Math.random()-.5)*240);const snowGeo=new THREE.BufferGeometry();snowGeo.setAttribute('position',new THREE.Float32BufferAttribute(snowPositions,3));const snowPoints=new THREE.Points(snowGeo,new THREE.PointsMaterial({color:0xe5f1ff,size:.11,transparent:true,opacity:.62}));scene.add(snowPoints);snowDrift.push({geo:snowGeo,points:snowPoints});
+ // Keep spawn in the open near the trailhead; first enemies are spread across the run and tree line.
+ camera.position.set(0,1.7,24);yaw=0;
+ // Enemies are deliberately kept well away from spawn and distributed across the enlarged resort.
+ spawnEnemy(-82,-78);spawnEnemy(96,-126);spawnEnemy(34,-168);spawnEnemy(-142,-22);spawnEnemy(166,-46);spawnEnemy(-176,118);spawnEnemy(128,152);
+ spawnEnemy(-38,-104);spawnEnemy(52,-72);spawnEnemy(-112,54);spawnEnemy(176,22);spawnEnemy(12,188);spawnEnemy(-64,146);spawnEnemy(92,82);spawnEnemy(-188,-154);spawnEnemy(148,-190);
+ // Field supplies in snow, with distinct silhouettes.
+ for(const [x,z,type] of [[-4,-18,'ammo'],[4,-30,'med'],[-3,-42,'ammo'],[3,-55,'med'],[0,-72,'ammo']]){const g=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(.7,.42,.55),mat(type==='med'?0x8cdbbf:0xb8a56a,.65));base.position.y=.25;g.add(base);const mark=new THREE.Mesh(new THREE.BoxGeometry(.34,.08,.08),mat(type==='med'?0xeafff6:0x24251f));mark.position.y=.49;g.add(mark);g.position.set(x,0,z);scene.add(g);pickups.push({g,type,active:true});}
+ } else if(currentMap==='village') {
+ // GREYFIELD RUINED VILLAGE: deliberate three-lane tactical layout, not a random building field.
+ scene.background=new THREE.Color(0x182126);scene.fog=new THREE.FogExp2(0x263034,.0085);
+ hemiLight.color.setHex(0x718087);hemiLight.groundColor.setHex(0x272a27);hemiLight.intensity=.92;
+ const earth=mat(0x494942,.98), plaster=mat(0x77736a), damaged=mat(0x4d514f), roof=mat(0x373b3a), wood=mat(0x514638), fence=mat(0x363a36), glass=mat(0x18272a,.3,.2), warm= new THREE.MeshStandardMaterial({color:0xcaa66f,emissive:0x68441e,emissiveIntensity:.42});
+ box(0,-.5,0,230,.9,230,earth,false);
+ // Outer road and readable lane markings; boundaries are visual rather than invisible kill-box walls.
+ box(0,.015,-4,5,.03,190,mat(0x303432),false);
+ for(let z=-92;z<95;z+=12){box(0,.025,z,.13,.025,4.5,mat(0xb8b29a),false);}
+ // Four connected zones: spawn hamlet (south), market square (centre), broken residential blocks (north), farm lane (east).
+ // Solid ruins are placed in intentional rows leaving clear routes through the middle and both flanks.
+ function ruinHouse(x,z,w,d,h,rot=0,brokenRoof=false){
+   const shell=box(x,h/2,z,w,h,d,plaster,true);shell.rotation.y=rot;
+   // front dark door, two windows and a roof slab; decorations don't add collision clutter.
+   box(x,1.05,z-d/2-.035,.95,2.1,.08,wood,false);
+   box(x-w*.28,2.05,z-d/2-.045,.78,.7,.06,glass,false);
+   box(x+w*.28,2.05,z-d/2-.045,.78,.7,.06,glass,false);
+   if(!brokenRoof)box(x,h+.08,z,w+0.35,.24,d+0.35,roof,true);
+   else { const slab=box(x-w*.2,h-.25,z,w*.56,.28,d*.72,roof,true);slab.rotation.z=.13; box(x+w*.28,h*.55,z+d*.18,w*.18,.22,d*.8,damaged,true); }
+   // Porch awning and rubble blocks act as low cover without sealing routes.
+   box(x,2.45,z-d/2-.8,w*.72,.18,1.45,wood,true);
+   box(x-w*.34,.42,z-d/2-1.2,.85,.84,.8,damaged,true);
+ }
+ // South spawn compound: three-sided ruined checkpoint with a wide forward exit.
+ box(-8,1.8,26,.6,3.6,16,damaged,true);box(8,1.8,26,.6,3.6,16,damaged,true);box(0,1.8,34,16,.6,.6,damaged,true);
+ box(-4,.65,23,2.3,1.3,1.6,wood,true);box(4,.55,29,1.5,1.1,1.3,damaged,true);
+ // West residential lane, with alternating building fronts and gaps for cross-lane movement.
+ ruinHouse(-24,18,12,10,5.5,.04,true);ruinHouse(-27,-5,11,10,6,-.04,false);ruinHouse(-23,-31,13,11,5.2,.08,true);
+ ruinHouse(-43,8,10,12,4.8,-.05,false);ruinHouse(-44,-20,11,12,5.8,.06,true);ruinHouse(-43,-43,12,10,5.1,0,false);
+ // East residential lane; a barn and stacked hay bales create a distinct long flank route.
+ ruinHouse(24,16,12,10,5.3,-.06,false);ruinHouse(28,-8,12,11,5.8,.03,true);ruinHouse(24,-33,13,10,5.1,-.04,false);
+ ruinHouse(44,5,11,12,5.7,.04,true);ruinHouse(44,-22,12,11,5.2,-.04,false);
+ box(51,2.3,-47,16,4.6,10,wood,true);box(51,4.75,-47,17,.35,11,roof,true);box(46,.55,-38,2.2,1.1,1.5,mat(0x756044),true);box(54,.55,-39,2.2,1.1,1.5,mat(0x756044),true);
+ // Central market square is deliberately open, with a well and waist-high cover pieces.
+ box(0,.9,-8,2.4,1.8,2.4,damaged,true);box(0,1.86,-8,2.7,.16,2.7,roof,true);
+ for(const [x,z] of [[-9,-3],[9,-3],[-10,-15],[10,-15]]){box(x,.55,z,2.2,1.1,1.1,wood,true);}
+ // North block: a breached wall and two staggered ruins form a final objective zone.
+ ruinHouse(-19,-61,14,11,6.3,.05,true);ruinHouse(19,-63,13,12,5.8,-.04,true);
+ ruinHouse(-43,-70,12,12,5.4,.02,false);ruinHouse(43,-71,12,11,5.5,-.03,false);
+ // Fences, broken wall sections, carts, wrecked civilian vehicles and concrete cover.
+ for(const [x,z,w,d] of [[-57,-4,14,.35],[57,-8,13,.35],[-57,-34,14,.35],[36,-49,14,.35],[-31,-82,18,.35],[30,-83,17,.35]]){
+   box(x,1.1,z,w,2.2,d,fence,true);for(let i=0;i<Math.floor(w/2);i++)box(x-w/2+1+i*2,1.15,z,.08,2.3,.12,mat(0x5d5a4f),false);
+ }
+ for(const [x,z,rot] of [[-10,10,.12],[11,7,-.2],[-14,-43,.18],[13,-48,-.1],[34,-55,.16],[-35,-55,-.14]]){const car=box(x,.68,z,2.1,1.35,4.2,mat(0x343b3c),true);car.rotation.y=rot;box(x,.98,z,1.65,.45,2.4,mat(0x20282a),false);}
+ // Lamp posts and low fog lamps mark the routes, not every corner.
+ for(const [x,z] of [[-9,17],[9,-23],[-38,-52],[38,-43],[0,-78]]){box(x,3.3,z,.14,6.6,.14,mats.metal,false);box(x,6.55,z,.8,.12,.35,warm,false);const l=new THREE.PointLight(0xffc98b,.62,13,2);l.position.set(x,5.8,z);scene.add(l);}
+ // Spawn faces north into the square. First enemies are beyond the first cover line, never beside the player.
+ camera.position.set(0,1.7,29);yaw=0;
+ for(const [x,z] of [[-35,-4],[34,-14],[-12,-27],[14,-37],[-49,-34],[49,-28],[-18,-57],[19,-56],[-48,-73],[45,-77],[0,-88]])spawnEnemy(x,z);
+ for(const [x,z,type] of [[-5,8,'ammo'],[7,-19,'med'],[-31,-28,'ammo'],[31,-35,'med'],[0,-69,'ammo'],[50,-12,'med']]){const g=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(.7,.42,.55),mat(type==='med'?0x8cdbbf:0xb8a56a,.65));base.position.y=.25;g.add(base);const mark=new THREE.Mesh(new THREE.BoxGeometry(.34,.08,.08),mat(type==='med'?0xeafff6:0x24251f));mark.position.y=.49;g.add(mark);g.position.set(x,0,z);scene.add(g);pickups.push({g,type,active:true});}
+ } else if(currentMap==='canyon') {
+ scene.background=new THREE.Color(0x3a2a24);scene.fog=new THREE.FogExp2(0x5a4034,.007);hemiLight.color.setHex(0xd09a78);hemiLight.groundColor.setHex(0x3a2a22);hemiLight.intensity=.95;
+ const sun2=new THREE.DirectionalLight(0xffb070,.8);sun2.position.set(60,40,-40);scene.add(sun2);
+ hf=(x,z)=>6*Math.sin(x*.05)*Math.cos(z*.045)+4*Math.sin(x*.023-z*.031+1)+14*Math.exp(-((x-20)**2+(z+40)**2)/520)+11*Math.exp(-((x+45)**2+(z+10)**2)/430)+9*Math.exp(-((x-55)**2+(z-10)**2)/380)-8*Math.exp(-(x*x+(z-70)**2)/1500);
+ const tg=new THREE.PlaneGeometry(260,260,120,120);tg.rotateX(-Math.PI/2);const pa=tg.attributes.position;for(let i=0;i<pa.count;i++)pa.setY(i,hf(pa.getX(i),pa.getZ(i)));tg.computeVertexNormals();scene.add(new THREE.Mesh(tg,mat(0x7a6244,1)));
+ const rock=mat(0x57524a);for(let i=0;i<34;i++){const x=(Math.random()-.5)*200,z=(Math.random()-.5)*200,h=2+Math.random()*4,w=2+Math.random()*4;if(Math.hypot(x,z-70)<14)continue;box(x,hf(x,z)+h/2-.6,z,w,h,w*.8,rock);}
+ camera.position.set(0,1.7,70);yaw=0;
+ for(let i=0;i<16;i++){const x=(Math.random()-.5)*190,z=-100+Math.random()*130;if(!blocked(x,z))spawnEnemy(x,z);}
+ for(const [x,z,type] of [[-5,52,'ammo'],[10,30,'med'],[-30,-20,'ammo'],[40,-25,'med']]){const g=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(.7,.42,.55),mat(type==='med'?0x8cdbbf:0xb8a56a,.65));base.position.y=.25;g.add(base);g.position.set(x,hf(x,z),z);scene.add(g);pickups.push({g,type,active:true});}
+ } else if(currentMap==='forest') {
+ scene.background=new THREE.Color(0x070f0c);scene.fog=new THREE.FogExp2(0x0a1512,.017);hemiLight.color.setHex(0x4a6a78);hemiLight.groundColor.setHex(0x0b1410);hemiLight.intensity=.6;
+ const moon=new THREE.DirectionalLight(0x8fb0e0,.7);moon.position.set(-40,60,30);scene.add(moon);
+ hf=(x,z)=>3.5*Math.sin(x*.04)*Math.cos(z*.035)+2.5*Math.sin(x*.017+z*.021+2)+6*Math.exp(-((x+30)**2+(z+55)**2)/600);
+ const tg=new THREE.PlaneGeometry(260,260,90,90);tg.rotateX(-Math.PI/2);const pa=tg.attributes.position;for(let i=0;i<pa.count;i++)pa.setY(i,hf(pa.getX(i),pa.getZ(i)));tg.computeVertexNormals();scene.add(new THREE.Mesh(tg,mat(0x1d2c20,1)));
+ const IP=[[-40,-30],[35,-50],[-5,-90],[0,70]],bark=mat(0x3a2c20),leaf=mat(0x14281a),cg=new THREE.ConeGeometry(2.6,6.5,7);
+ for(let i=0;i<200;i++){const x=(Math.random()-.5)*210,z=(Math.random()-.5)*210;if(IP.some(q=>Math.hypot(x-q[0],z-q[1])<(q[1]===70?14:5)))continue;const gy=hf(x,z);box(x,gy+3.5,z,.7,7,.7,bark);const c=new THREE.Mesh(cg,leaf);c.position.set(x,gy+8.2,z);scene.add(c);}
+ camera.position.set(0,1.7,70);yaw=0;
+ for(const [x,z] of IP.slice(0,3)){const l=new THREE.PointLight(0xff8a35,1.5,12,2);l.position.set(x+2,hf(x,z)+1.2,z+2);scene.add(l);fires.push({l,ph:Math.random()*9});}
+ for(const [x,z,type] of [[-6,50,'ammo'],[8,28,'med'],[-30,-10,'ammo'],[30,-30,'med']]){const g=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(.7,.42,.55),mat(type==='med'?0x8cdbbf:0xb8a56a,.65));base.position.y=.25;g.add(base);g.position.set(x,hf(x,z),z);scene.add(g);pickups.push({g,type,active:true});}
+ } else if(currentMap==='industrial') {
+ // DOCKSIDE CONTAINER YARD: distinct, broad navigation layout with lanes, warehouses and stacked containers.
+ scene.background=new THREE.Color(0x101820);scene.fog=new THREE.FogExp2(0x202b32,.009);
+ hemiLight.color.setHex(0x7b8994);hemiLight.groundColor.setHex(0x15191d);hemiLight.intensity=1.0;
+ const ground=mat(0x30383d,.98), warehouse=mat(0x343b40), containerMats=[mat(0x435653),mat(0x6b4038),mat(0x394d64),mat(0x68634b)], lightMat=new THREE.MeshStandardMaterial({color:0xffd18b,emissive:0xb96d2a,emissiveIntensity:.9});
+ box(0,-.5,0,260,.9,260,ground,false);
+ // Perimeter fences and distinct warehouse blocks; central roads remain open and connected.
+ for(const [x,z,w,d,h] of [[-74,-58,28,42,14],[74,-58,28,42,14],[-74,52,28,38,12],[74,52,28,38,15],[0,-100,42,18,10],[0,100,42,18,11]]){box(x,h/2,z,w,h,d,warehouse);box(x,h+.25,z,w+.6,.5,d+.6,mats.dark,false);}
+ for(let row=0;row<5;row++) for(let col=0;col<6;col++){
+   const x=-48+col*19+(row%2?5:0), z=-63+row*31;
+   if(Math.abs(x)<19 && Math.abs(z)<30) continue;
+   const len=10+(col%3)*2, height=(row+col)%4===0?5.6:2.8, cm=containerMats[(row*3+col)%containerMats.length];
+   box(x,height/2,z,len,height,5.2,cm,true);
+   // Sparse corrugation ribs add readable surface detail without texture files or heavy assets.
+   for(let r=0;r<Math.floor(len/2);r++)box(x-len/2+.8+r*2,height/2,z-2.64,.055,height*.88,.06,mats.metal,false);
+ }
+ // Yard lamps and painted lane marks.
+ for(const [x,z] of [[-28,-85],[28,-85],[-28,0],[28,0],[-28,85],[28,85],[-92,0],[92,0]]){box(x,5,z,.22,10,.22,mats.metal,false);box(x,9.8,z,1.4,.18,.6,lightMat,false);const l=new THREE.PointLight(0xffc57b,.75,19,2);l.position.set(x,9,z);scene.add(l);}
+ for(let z=-112;z<=112;z+=8){box(0,.015,z,.16,.025,3.4,mat(0xc8b978),false);}
+ // Start in a wide, unobstructed lane; patrols are spread across the yard, not around spawn.
+ camera.position.set(0,1.7,72);yaw=Math.PI;
+ for(const [x,z] of [[-92,-85],[92,-78],[-48,-38],[53,-32],[-95,5],[96,20],[-48,64],[51,78],[-12,-105],[16,104],[-110,55],[112,-48],[0,-78],[0,85]])spawnEnemy(x,z);
+ for(const [x,z,type] of [[-12,52,'ammo'],[12,18,'med'],[-58,-6,'ammo'],[58,44,'med'],[0,-94,'ammo'],[-102,-20,'med']]){const g=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(.7,.42,.55),mat(type==='med'?0x8cdbbf:0xb8a56a,.65));base.position.y=.25;g.add(base);const mark=new THREE.Mesh(new THREE.BoxGeometry(.34,.08,.08),mat(type==='med'?0xeafff6:0x24251f));mark.position.y=.49;g.add(mark);g.position.set(x,0,z);scene.add(g);pickups.push({g,type,active:true});}
+ } else {
+ // SHIBUYA BACKSTREETS: dense, roofed Japanese nightlife alleys arranged as a small maze.
+ scene.background=new THREE.Color(0x10151b);scene.fog=new THREE.FogExp2(0x151b22,.018);
+ hemiLight.color.setHex(0x53616d);hemiLight.groundColor.setHex(0x151719);hemiLight.intensity=.82;
+ const cityGround=mat(0x24272b,.98), wall=mat(0x39383a), darkWall=mat(0x1b2025), asphalt=mat(0x202326), metal=mat(0x343b40,.6,.4);
+ const neonPink=new THREE.MeshStandardMaterial({color:0xff5cb8,emissive:0xe71d83,emissiveIntensity:1.3});
+ const neonBlue=new THREE.MeshStandardMaterial({color:0x58cfff,emissive:0x138bd4,emissiveIntensity:1.1});
+ const neonRed=new THREE.MeshStandardMaterial({color:0xff5146,emissive:0xc82119,emissiveIntensity:1.1});
+ box(0,-.5,0,180,.9,180,cityGround,false);
+ // Spawn safe room / service hut. Front opening faces the alley toward -Z.
+ box(-3.6,1.7,18.5,.5,3.4,8,wall);box(3.6,1.7,18.5,.5,3.4,8,wall);box(0,1.7,22.5,7.2,3.4,.5,wall);
+ box(-2.35,1.7,14.5,2.5,3.4,.5,wall);box(2.35,1.7,14.5,2.5,3.4,.5,wall);box(0,3.55,14.5,2.3,.5,.5,wall,false); // overhead lintel: decorative, must not block the doorwaybox(0,3.7,18.5,7.8,.45,8.5,darkWall,false);
+ // Enclosing ceiling panels keep the sky hidden; occasional gaps reveal pipes and dim lamps.
+ for(let z=-48;z<19;z+=8){box(0,5.1,z,14,.35,8,darkWall,false);}
+ // Main maze boundaries and offset cross lanes. All are solid collision surfaces.
+ const walls=[[-7,9,1,18],[7,7,1,20],[-3,1,8,1],[3,-7,8,1],[-7,-12,1,18],[7,-17,1,20],[-2,-20,10,1],[2,-31,10,1],[-7,-37,1,17],[7,-42,1,14],[-1,-48,12,1],[-13,-4,1,18],[13,-12,1,24],[-15,-26,12,1],[15,-31,12,1],[-13,-40,1,15],[13,-47,1,13],[-22,-17,1,18],[22,-24,1,22],[-20,-35,10,1],[20,-39,10,1]];
+ for(const [x,z,w,d] of walls)box(x,2.2,z,w,4.4,d,wall);
+ // Building facades, shopfronts, shutters and signboards on either side of winding lanes.
+ const shopRows=[[-5,11,3.2,2.8], [5,2,3,2.6],[-5,-9,3.2,2.5],[5,-17,3,2.5],[-5,-29,3.2,2.8],[5,-38,3,2.6],[-11,-8,2.6,3], [11,-25,2.8,3],[-18,-22,3,2.7],[18,-32,3,2.7]];
+ for(let i=0;i<shopRows.length;i++){const [x,z,w,d]=shopRows[i];const sign=i%3===0?neonPink:i%3===1?neonBlue:neonRed;box(x,2.6,z,w,2.2,d,darkWall,false);box(x,3.75,z-d/2-.08,w*.88,.65,.12,sign,false);box(x,1.1,z-d/2-.12,w*.86,1.9,.12,mat(0x17191c),false);box(x,1.8,z-d/2-.2,w*.72,.55,.05,sign,false);}
+ // Covered awnings and low overhead crossbeams make the passages feel cramped.
+ for(const [x,z,w,d] of [[-5,4,5,3],[5,-12,5,3],[-5,-25,5,3],[5,-34,5,3],[-17,-15,4,3],[17,-28,4,3]]){box(x,4.4,z,w,.28,d,metal,false);}
+ // Pipes, air conditioners, cables, vending machines, crates, dumpsters and signs.
+ for(let i=0;i<15;i++){const x=(i%2?1:-1)*(5.5+Math.random()*1.8),z=9-i*4.2;box(x,3.5,z,.18,.18,3.8,metal,false);box(x+(i%2?-.25:.25),2.7,z,1.1,.8,.55,darkWall,false);}
+ for(const [x,z] of [[-2,7],[2,-4],[-2,-16],[2,-28],[-2,-40],[10,-9],[-10,-31]]){box(x,1.1,z,.8,2.2,.75,mat(0x263d42),false);box(x,1.45,z-.39,.58,.85,.035,neonBlue,false);}
+ for(const [x,z] of [[-1,2],[1,-11],[-1,-23],[1,-35],[-10,-16],[10,-34]]){box(x,.55,z,1.1,1.1,.8,mat(0x3a3a36));}
+ // Fluorescent lamps and haze-like colored pools of light.
+ for(let i=0;i<10;i++){const z=10-i*6;const lamp=new THREE.PointLight(i%2?0x5dbbff:0xff5ca8,1.25,10,2);lamp.position.set(i%2?3:-3,4.3,z);scene.add(lamp);box(i%2?3:-3,4.8,z,.9,.08,.28,i%2?neonBlue:neonPink,false);}
+ // NEW OUTER DISTRICT: a wider, newly generated urban block with a boulevard, service yards, shops and cover.
+ // The older alley network remains connected to this larger district through the north exit.
+ for(const [x,z,w,d,h] of [[-48,-54,18,22,13],[48,-52,20,24,16],[-49,-87,24,14,11],[48,-88,22,15,14],[-72,-35,14,24,12],[72,-34,14,25,15],[-72,-78,15,20,10],[73,-79,16,18,13],[0,-78,18,10,8]]){
+   building(x,z,w,d,h,Math.random()<.55);
+   // storefront lights and signage provide landmarks without external image assets
+   const signMat=[neonPink,neonBlue,neonRed][Math.floor(Math.random()*3)];
+   box(x,Math.min(h-1,3.5),z-d/2-.12,Math.min(w*.72,9),.55,.16,signMat,false);
+ }
+ // Road markings, bollards, containers and wrecked cars create distinct navigation lanes.
+ for(let z=-49;z>=-103;z-=8){box(0,.012,z,.12,.025,3.4,mat(0xb9b9a1),false);}
+ for(const [x,z] of [[-32,-57],[31,-60],[-31,-87],[31,-91],[-56,-48],[56,-48],[-58,-99],[59,-100]]){
+   const c=box(x,.75,z,2.2,1.5,4.2,mat(0x303b40));c.rotation.y=(Math.random()-.5)*.25;
+ }
+ for(let i=0;i<16;i++){const x=(i%2?1:-1)*(24+Math.random()*52),z=-46-Math.random()*58;const pole=box(x,3.2,z,.13,6.4,.13,metal,false);box(x,6.35,z,.65,.12,.3,i%2?neonBlue:neonPink,false);const lamp=new THREE.PointLight(i%2?0x65bfff:0xff5aaf,.65,12,2);lamp.position.set(x,5.8,z);scene.add(lamp);}
+ // Additional patrols in the new district are deliberately spread out and not clustered at spawn.
+ for(const [x,z] of [[-35,-53],[42,-66],[-61,-72],[61,-60],[-28,-91],[28,-101],[-78,-57],[79,-94],[0,-111],[-49,-112],[52,-116]])spawnEnemy(x,z);
+ camera.position.set(0,1.7,18.5);yaw=0;
+ spawnEnemy(-4,-3);spawnEnemy(5,-14);spawnEnemy(-9,-20);spawnEnemy(3,-28);spawnEnemy(-4,-36);spawnEnemy(17,-18);spawnEnemy(-17,-30);spawnEnemy(8,5);spawnEnemy(0,-44);
+ for(const [x,z,type] of [[-2,0,'ammo'],[2,-13,'med'],[-3,-26,'ammo'],[3,-37,'med'],[-10,-28,'ammo']]){const g=new THREE.Group();const base=new THREE.Mesh(new THREE.BoxGeometry(.7,.42,.55),mat(type==='med'?0x8cdbbf:0xb8a56a,.65));base.position.y=.25;g.add(base);const mark=new THREE.Mesh(new THREE.BoxGeometry(.34,.08,.08),mat(type==='med'?0xeafff6:0x24251f));mark.position.y=.49;g.add(mark);g.position.set(x,0,z);scene.add(g);pickups.push({g,type,active:true});}
+ }
+ scene.add(camera);if(!netConnected){enemies.forEach(e=>scene.remove(e.g));enemies.length=0;setupMission(currentMap);addWalls(currentMap);placeEnemies(currentMap);dressMap(currentMap);}viewWeapon=createViewWeapon();camera.add(viewWeapon);propG=makeProp();camera.add(propG);
+ updateHUD();window.addEventListener('resize',resize);renderer.domElement.addEventListener('click',()=>{if(started&&!dead&&!paused&&document.pointerLockElement!==renderer.domElement)renderer.domElement.requestPointerLock()});document.addEventListener('pointerlockchange',()=>{if(started&&!dead)paused=document.pointerLockElement!==renderer.domElement;});document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&started&&!dead){yaw-=e.movementX*(aiming?.0012:.0022);pitch-=e.movementY*(aiming?.0012:.0022);pitch=Math.max(-1.35,Math.min(1.35,pitch));camera.rotation.set(pitch,yaw,0)}});document.addEventListener('keydown',e=>{if(!e.repeat&&e.code==='KeyZ'&&started&&!dead){crouched=!crouched;camera.position.y=crouched?1.02:1.7;showToast(crouched?'しゃがみ':'立ち上がる')}if(!e.repeat&&e.code==='KeyT'&&started&&!dead){aiming=!aiming;document.body.classList.toggle('aiming',aiming);if(laserLine)laserLine.visible=flashlightOn||aiming;showToast(aiming?'レーザースコープ照準':'通常視点')}if(!e.repeat&&e.code==='KeyY'&&started&&!dead){flashlightOn=!flashlightOn;flashSpot.intensity=flashlightOn?85:0;flashFill.intensity=flashlightOn?5.5:0;laserLine.visible=flashlightOn||aiming;updateGearStatus();showToast(flashlightOn?'懐中電灯＋赤色レーザー ON':'懐中電灯＋赤色レーザー OFF')}if(!e.repeat&&e.code==='KeyH'&&started&&!dead){if(nvgOn){nvgOn=false;document.body.classList.remove('nvg');hemiLight.intensity=.95;scene.fog.color.setHex(0x151b22);scene.fog.density=.014;showToast('暗視ゴーグル OFF')}else if(nvgLocked||nvgBattery<=0){showToast('暗視ゴーグル：バッテリー切れ')}else{nvgOn=true;document.body.classList.add('nvg');hemiLight.intensity=3.4;scene.fog.color.setHex(0x39784b);scene.fog.density=.0012;showToast('暗視ゴーグル ON')}updateGearStatus()}if(!e.repeat&&e.code==='KeyG'&&started&&!dead){if(medkits>0&&hp<100){medkits--;hp=Math.min(100,hp+38);updateHUD();showToast('応急処置 +38 HP')}else if(medkits<=0){showToast('回復アイテムがない')}else{showToast('体力は満タン')} }keys[e.code]=true;if(e.code==='KeyR')reload();if(e.code==='Escape'&&started&&!dead){paused=true;showToast('一時停止 — 画面をクリックして再開')}});document.addEventListener('keyup',e=>keys[e.code]=false);document.addEventListener('mousedown',e=>{if(e.button===0&&started&&!dead){shooting=true;if(document.pointerLockElement!==renderer.domElement)renderer.domElement.requestPointerLock()}});document.addEventListener('mouseup',e=>{if(e.button===0)shooting=false});}
+function netStatus(t){const el=$('netStatus');if(el)el.textContent=t;}
+function connectRoom(create){
+ if(net&&net.readyState===WebSocket.OPEN){net.close();net=null;}
+ const roomInput=$('roomCode');let code=(roomInput.value||'').trim();if(create){code=String(Math.floor(100000+Math.random()*900000));roomInput.value=code;}else if(!/^\d{6}$/.test(code)){netStatus('6桁の部屋番号を入力してね');return;}
+ const proto=location.protocol==='https:'?'wss:':'ws:';const url=location.protocol==='file:'?'':proto+'//'+location.host+'/ws';
+ if(!url){netStatus('オンラインはサーバー公開URLから開いてね（file://では接続できません）');return;}
+ netRoom=code;netStatus('接続中…');try{net=new WebSocket(url);}catch(e){netStatus('接続失敗：公開サーバーURLを確認');return;}
+ net.onopen=()=>net.send(JSON.stringify({type:create?'create':'join',room:code,map:selectedMap}));
+ net.onmessage=ev=>{let m;try{m=JSON.parse(ev.data)}catch{return}
+  if(m.type==='joined'){netConnected=true;netId=m.id;netRole=m.role;peerPresent=false;netStatus('待機中｜部屋番号 '+netRoom+' を友達に送ってね。1人で遊ぶなら「プレイ開始」を押してね。');showToast('待機画面：部屋を作成しました');}
+  if(m.type==='error'){netStatus('接続エラー：'+m.message);}
+  if(m.type==='room-state'){peerPresent=Number(m.count)>=2;netStatus(peerPresent?'友達が参加しています。2人そろいました！「対人戦を開始」を押してね。部屋 '+netRoom:'待機中｜部屋番号 '+netRoom+' を友達に送ってね。一人なら「プレイ開始」でソロ出撃できます。');}if(m.type==='peer-joined'){peerPresent=true;netStatus('友達が参加しました！「対人戦を開始」で出撃できます。部屋 '+netRoom);}
+  if(m.type==='state'&&m.id!==netId){let rp=remotePlayers.get(m.id);if(!rp&&scene){rp=makeRemotePlayer();remotePlayers.set(m.id,rp);scene.add(rp);}if(rp){rp.position.set(m.x,0,m.z);rp.rotation.y=m.yaw||0;rp.userData.hp=m.hp||100;}}
+  if(m.type==='shot'&&m.id!==netId&&scene){const rp=remotePlayers.get(m.id);if(rp){const a=new THREE.Vector3(rp.position.x,1.4,rp.position.z);const d=new THREE.Vector3(-Math.sin(m.yaw||0),0,-Math.cos(m.yaw||0));const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,a.clone().addScaledVector(d,22)]),new THREE.LineBasicMaterial({color:0xffc66b,transparent:true,opacity:.75}));scene.add(line);tracers.push({m:line,t:.09});}}
+  if(m.type==='peer-left'){peerPresent=false;const rp=remotePlayers.get(m.id);if(rp&&scene)scene.remove(rp);remotePlayers.delete(m.id);netStatus('友達が退出しました。1人で遊ぶなら「プレイ開始」を押してね。');}
+  if(m.type==='room-full')netStatus('この部屋は満員です（最大2人）');
+ };
+ net.onclose=()=>{netConnected=false;peerPresent=false;if(!started)netStatus('サーバーとの接続が切れました。RenderのLogsと公開URLを確認してね。');};net.onerror=()=>netStatus('通信エラー：Renderの公開状態・Logs・/healthを確認してね');
+}
+function sendNet(data){if(netConnected&&net&&net.readyState===WebSocket.OPEN)net.send(JSON.stringify(data));}
+function makeRemotePlayer(){const g=new THREE.Group();const uniform=new THREE.MeshStandardMaterial({color:0x65705b,roughness:1});const dark=new THREE.MeshStandardMaterial({color:0x202829,roughness:.9});const body=new THREE.Mesh(new THREE.BoxGeometry(.52,.72,.28),uniform);body.position.y=1.05;g.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.19,8,7),dark);head.position.y=1.57;g.add(head);const helmet=new THREE.Mesh(new THREE.SphereGeometry(.22,8,6),new THREE.MeshStandardMaterial({color:0x343d37,roughness:1}));helmet.scale.y=.55;helmet.position.y=1.7;g.add(helmet);const gun=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.78),dark);gun.position.set(.32,1.18,-.25);g.add(gun);g.userData.hp=100;return g;}
+function createViewWeapon(){
+ // Fictional low-poly first-person prop, attached to the camera so it stays in the player's hands.
+ const g=new THREE.Group();
+ const polymer=new THREE.MeshStandardMaterial({color:0x20282a,roughness:.82,metalness:.18});
+ const edge=new THREE.MeshStandardMaterial({color:0x394347,roughness:.68,metalness:.28});
+ const rubber=new THREE.MeshStandardMaterial({color:0x111719,roughness:1});
+ const sleeve=new THREE.MeshStandardMaterial({color:0x303a3c,roughness:1});
+ const glove=new THREE.MeshStandardMaterial({color:0x171e1f,roughness:1});
+ function part(geo,matr,x,y,z,rz=0){const m=new THREE.Mesh(geo,matr);m.position.set(x,y,z);m.rotation.z=rz;g.add(m);return m;}
+ // Main silhouette and front section; deliberately generic and non-functional.
+ part(new THREE.BoxGeometry(.19,.16,.43),polymer,0,0,0);
+ part(new THREE.BoxGeometry(.145,.12,.31),edge,0,.015,-.34);
+ const barrel=part(new THREE.CylinderGeometry(.025,.03,.42,8),rubber,0,.005,-.69);
+ barrel.rotation.x=-Math.PI/2;
+ part(new THREE.BoxGeometry(.12,.08,.13),rubber,0,-.015,-.88);
+ part(new THREE.BoxGeometry(.17,.09,.22),polymer,0,.025,.29);
+ part(new THREE.BoxGeometry(.105,.22,.13),rubber,0,-.16,.025,-.08);
+ part(new THREE.BoxGeometry(.10,.17,.15),edge,0,-.14,-.04,-.08);
+ // Small, clearly stylized top sight block.
+ part(new THREE.BoxGeometry(.075,.065,.13),rubber,0,.115,-.19);
+ part(new THREE.BoxGeometry(.035,.025,.055),edge,0,.154,-.19);
+ // Fore-end and grip.
+ part(new THREE.BoxGeometry(.15,.095,.23),edge,0,-.005,-.42);
+ part(new THREE.BoxGeometry(.09,.18,.10),rubber,.015,-.145,-.01,-.14);
+ // Sleeves and gloves frame the prop from the lower corners.
+ const rightSleeve=part(new THREE.BoxGeometry(.23,.23,.42),sleeve,.31,-.25,-.05,-.28);
+ rightSleeve.rotation.y=-.18;
+ part(new THREE.BoxGeometry(.16,.11,.18),glove,.22,-.15,-.26,-.18);
+ const leftSleeve=part(new THREE.BoxGeometry(.22,.20,.38),sleeve,-.30,-.30,-.20,.24);
+ leftSleeve.rotation.y=.22;
+ part(new THREE.BoxGeometry(.16,.10,.19),glove,-.16,-.12,-.39,.12);
+ g.position.set(.34,-.34,-.68);g.scale.set(.82,.82,.82);g.rotation.set(0,0,0);g.renderOrder=3;
+ g.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.renderOrder=3;}});
+ return g;
+}
+function spawnEnemy(x,z,style){
+ // Online PvP: do not create AI enemies. Solo mode keeps the normal AI opponents.
+ if(netConnected)return;
+ const g=new THREE.Group();
+ // Layered silhouette: camouflaged fatigues, plate carrier, helmet, pouches, gloves and boots.
+ const torso=new THREE.Mesh(new THREE.BoxGeometry(.66,1.02,.4),mats.enemy);torso.position.y=1.15;torso.castShadow=true;g.add(torso);
+ const vest=new THREE.Mesh(new THREE.BoxGeometry(.72,.68,.2),vestMat);vest.position.set(0,1.22,-.22);g.add(vest);
+ const frontPlate=new THREE.Mesh(new THREE.BoxGeometry(.43,.42,.045),eliteMat);frontPlate.position.set(0,1.27,-.34);g.add(frontPlate);
+ const pack=new THREE.Mesh(new THREE.BoxGeometry(.48,.57,.18),eliteMat);pack.position.set(0,1.25,.23);g.add(pack);
+ // Extra carrier webbing, radio and segmented utility pouches.
+ for(let side of [-1,1]){const strap=new THREE.Mesh(new THREE.BoxGeometry(.075,.67,.035),helmetMat);strap.position.set(side*.22,1.28,-.34);g.add(strap);for(let row=0;row<3;row++){const seam=new THREE.Mesh(new THREE.BoxGeometry(.13,.018,.012),mat(0x687065));seam.position.set(side*.21,1.06+row*.12,-.378);g.add(seam);}}
+ const radio=new THREE.Mesh(new THREE.BoxGeometry(.12,.25,.10),eliteMat);radio.position.set(-.25,1.42,.23);g.add(radio);const antenna=new THREE.Mesh(new THREE.CylinderGeometry(.009,.009,.26,5),mats.dark);antenna.position.set(-.28,1.66,.23);g.add(antenna);
+ const nvg=new THREE.Mesh(new THREE.BoxGeometry(.2,.07,.09),mat(0x152b2a,.3,.3));nvg.position.set(0,2.05,-.19);g.add(nvg);
+ for(let s of [-1,1]){const pouch=new THREE.Mesh(new THREE.BoxGeometry(.16,.22,.1),vestMat);pouch.position.set(s*.21,1.02,-.32);g.add(pouch);}
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),skinMat);head.position.y=1.88;g.add(head);
+ const helmet=new THREE.Mesh(new THREE.SphereGeometry(.255,10,7,0,Math.PI*2,0,Math.PI*.58),helmetMat);helmet.position.y=2.0;g.add(helmet);
+ const visor=new THREE.Mesh(new THREE.BoxGeometry(.28,.045,.035),mats.dark);visor.position.set(0,1.91,-.22);g.add(visor);
+ const helmetBand=new THREE.Mesh(new THREE.BoxGeometry(.42,.055,.27),vestMat);helmetBand.position.set(0,2.02,-.015);g.add(helmetBand);const helmetNVG=new THREE.Mesh(new THREE.BoxGeometry(.16,.08,.09),mat(0x263a36,.4,.2));helmetNVG.position.set(0,1.84,-.25);g.add(helmetNVG);
+ // Cosmetic helmet details: side rails, ear pads, chin strap and a low-profile crown ridge.
+ for(const side of [-1,1]){
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(.035,.055,.24),mat(0x1d2522,.8,.12));rail.position.set(side*.235,1.99,-.005);g.add(rail);
+  for(let j=0;j<3;j++){const bolt=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.012,8),mat(0x818777,.55,.35));bolt.rotation.z=Math.PI/2;bolt.position.set(side*.257,1.99,-.085+j*.08);g.add(bolt);}
+  const earPad=new THREE.Mesh(new THREE.BoxGeometry(.055,.17,.12),vestMat);earPad.position.set(side*.215,1.91,.015);g.add(earPad);
+  const strap=new THREE.Mesh(new THREE.BoxGeometry(.025,.20,.025),vestMat);strap.position.set(side*.13,1.79,-.10);strap.rotation.z=side*.32;g.add(strap);
+ }
+ const crownRidge=new THREE.Mesh(new THREE.BoxGeometry(.09,.018,.24),mat(0x465047,.95));crownRidge.position.set(0,2.205,.015);g.add(crownRidge);
+
+ const legs=[],arms=[];for(let s of [-1,1]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.23,.7,.25),mats.enemy);leg.geometry.translate(0,-.35,0);leg.position.set(s*.2,.83,0);g.add(leg);legs.push(leg);const boot=new THREE.Mesh(new THREE.BoxGeometry(.24,.16,.34),vestMat);boot.position.set(0,-.71,-.045);leg.add(boot);const arm=new THREE.Mesh(new THREE.BoxGeometry(.2,.62,.22),mats.enemy);arm.geometry.translate(0,-.31,0);arm.position.set(s*.43,1.55,-.01);arm.rotation.x=-1.25;arm.rotation.z=-s*.2;g.add(arm);arms.push(arm);const glove=new THREE.Mesh(new THREE.BoxGeometry(.16,.15,.17),vestMat);glove.position.set(0,-.66,0);arm.add(glove);}
+ const gun=new THREE.Mesh(new THREE.BoxGeometry(.14,.15,1.02),eliteMat);gun.position.set(.34,1.28,-.53);g.add(gun);
+ const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.032,.032,.5,7),mats.dark);barrel.rotation.x=Math.PI/2;barrel.position.set(.34,1.3,-1.23);g.add(barrel);
+ const optic=new THREE.Mesh(new THREE.BoxGeometry(.09,.11,.24),mat(0x11191b,.35,.3));optic.position.set(.34,1.4,-.52);g.add(optic);
+ const muzzleDevice=new THREE.Mesh(new THREE.CylinderGeometry(.045,.035,.13,7),mat(0x0d1113,.6,.2));muzzleDevice.rotation.x=Math.PI/2;muzzleDevice.position.set(.34,1.3,-1.53);g.add(muzzleDevice);
+ g.position.set(x,0,z);scene.add(g);enemies.push({g,hp:120,alive:true,legs,arms,torso,head,helmet,visor,gun,phase:Math.random()*6,fire:8+Math.random()*5,crouched:false,crouchTimer:3+Math.random()*6,alerted:false,investigating:false,lastKnownX:x,lastKnownZ:z,patrolX:x+(Math.random()-.5)*7,patrolZ:z+(Math.random()-.5)*7,patrolTimer:2+Math.random()*4,searchTimer:0,adaptFlank:.35,adaptSearch:.5,strafeSign:Math.random()<.5?-1:1,hx:x,hz:z,style:style||(r=>r<.2?"rush":r<.5?"flank":r<.85?"hold":"sniper")(Math.random())});
+}
+function updateGearStatus(){const b=Math.max(0,Math.ceil(nvgBattery));const pct=Math.max(0,Math.min(100,nvgBattery/150*100));$('gear-status').innerHTML='LIGHT / LASER: '+(flashlightOn?'ON':'OFF')+'<br>NVG: '+(nvgOn?'ON':'OFF')+'<br>BATTERY '+String(Math.floor(b/60)).padStart(2,'0')+':'+String(b%60).padStart(2,'0')+' <span class="battery-track"><span class="battery-fill" style="width:'+pct+'%;background:'+(pct<20?'#ff695c':'#7cff9d')+'"></span></span>';}
+function updateHUD(){
+ $('hpText').textContent=Math.max(0,Math.round(hp));
+ $('hpBar').style.width=Math.max(0,hp)+'%';
+ $('hpBar').style.background=hp<30?'#ff6859':'#79e0d1';
+ $('mag').textContent=weapon===3?grenades:weapon===2?'—':ammo;$('reserve').textContent=weapon===1?reserve:'—';$('medkitCount').textContent=medkits;
+ $('enemyCount').textContent=enemies.filter(e=>e.alive).length;
+ if(netConnected){$('objective').textContent='OBJECTIVE: ELIMINATE THE OTHER PLAYER';return;}
+ $('objective').textContent=currentMap==='ski'?(!combatStarted?(missionElapsed<30?'OBJECTIVE: REACH THE RIDGELINE — 30s TO MORTAR BARRAGE':'OBJECTIVE: RECON THE RESORT'):(enemies.some(e=>e.alive)?'OBJECTIVE: RECON THE RESORT':'OBJECTIVE: SECTOR SECURED')):(!combatStarted?'OBJECTIVE: CLEAR THE BACKSTREETS':(enemies.some(e=>e.alive)?'OBJECTIVE: CLEAR THE BACKSTREETS':'OBJECTIVE: SECTOR SECURED'));
+}
+function showToast(t){$('toast').textContent=t;$('toast').style.opacity=1;toastTimer=2.0}
+function reload(){if(weapon!==1||reloading||ammo===30||reserve<=0||dead)return;reloading=true;$('weaponState').textContent='RELOADING...';showToast('マガジン交換中');setTimeout(()=>{if(dead)return;const n=Math.min(30-ammo,reserve);ammo+=n;reserve-=n;reloading=false;$('weaponState').textContent='BURST/AUTO • ENHANCED LOAD';updateHUD()},1150)}
+function shoot(){
+ if(weapon!==1)return altAttack();
+ if(reloading||ammo<=0){if(ammo<=0&&!reloading)showToast('弾切れ — Rでリロード');return}const now=performance.now();if(now-lastShot<115)return;lastShot=now;
+ startCombat();
+ // A shot is heard across nearby alleys. Soldiers investigate the last known firing position;
+ // hearing alone does not mean they instantly know the player's exact current position.
+ let heard=0;for(const e of enemies){if(!e.alive)continue;const d=e.g.position.distanceTo(camera.position);if(d<45){e.alerted=true;e.investigating=false;e.lastKnownX=camera.position.x;e.lastKnownZ=camera.position.z;e.searchTimer=22;e.fire=Math.min(e.fire,.65+Math.random()*.7);heard++;}}
+ if(heard)showToast('銃声を聞いた敵が発砲地点を捜索中');ammo--;shotsFired++;sendNet({type:'shot',yaw:yaw});recoil=Math.min(2.2,recoil+.75);pitch=Math.min(1.35,pitch+(aiming?.003:.006));yaw+=(Math.random()-.5)*(aiming?.004:.008);weaponKick=Math.min(1.0,weaponKick+.62);shotShake=Math.min(1.0,shotShake+.5);playerProfile.shots++;playerProfile.aggression=Math.min(1,playerProfile.aggression+.006);updateHUD();$('statusline').textContent='RADIO: SHOTS FIRED — ENEMY POSITIONS COMPROMISED';$('cross').style.transform='scale(1.35)';setTimeout(()=>$('cross').style.transform='scale(1)',50);
+ fireBullet();return;camera.updateMatrixWorld(true);camera.getWorldDirection(forward);raycaster.set(camera.position,forward);raycaster.far=65;const solidMeshes=obstacles.map(o=>o.obj).filter(o=>o&&o.visible);const wallHits=raycaster.intersectObjects(solidMeshes,false);const wallDist=wallHits.length?wallHits[0].distance:65;const targets=[];for(const e of enemies)if(e.alive){const p=e.g.position.clone();p.y+=1.15;targets.push({e,p})}let hit=null,dist=Math.min(65,wallDist);for(const t of targets){const v=t.p.clone().sub(camera.position);const along=v.dot(forward);if(along<0||along>dist||along>=wallDist-.04)continue;const near=camera.position.clone().addScaledVector(forward,along);if(near.distanceTo(t.p)<.72&&hasLineOfSight(camera.position.x,camera.position.y,camera.position.z,t.p.x,t.p.y,t.p.z)){hit=t.e;dist=along}}if(hit){hit.hp-=34;const spark=new THREE.Mesh(new THREE.SphereGeometry(.09,5,5),new THREE.MeshBasicMaterial({color:0xffb86b}));spark.position.copy(hit.g.position);spark.position.y+=1.2;scene.add(spark);particles.push({m:spark,t:.12});if(hit.hp<=0){hit.alive=false;scene.remove(hit.g);kills++;showToast('敵影を排除');$('statusline').textContent='HOSTILE DOWN // CONFIRM NEXT SECTOR';updateHUD()}}else{const end=camera.position.clone().addScaledVector(forward,Math.min(24,dist));const geo=new THREE.BufferGeometry().setFromPoints([camera.position.clone(),end]);const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xffdca0,transparent:true,opacity:.65}));scene.add(line);tracers.push({m:line,t:.055})}}
+function hasLineOfSight(ax,ay,az,bx,by,bz){
+ if(hf){const L=Math.hypot(bx-ax,bz-az),n=Math.ceil(L/2);for(let i=1;i<n;i++){const u=i/n;if(ay+(by-ay)*u<hf(ax+(bx-ax)*u,az+(bz-az)*u))return false}}
+ // Test the shot segment against every solid obstacle AABB; a wall or barricade blocks it.
+ const dx=bx-ax,dy=by-ay,dz=bz-az;
+ for(const o of obstacles){
+   if(!o.obj || !o.obj.visible) continue;
+   const minX=o.x-o.hx,maxX=o.x+o.hx,minY=o.bottom,maxY=o.top,minZ=o.z-o.hz,maxZ=o.z+o.hz;
+   let tmin=0,tmax=1;
+   for(const [origin,delta,min,max] of [[ax,dx,minX,maxX],[ay,dy,minY,maxY],[az,dz,minZ,maxZ]]){
+     if(Math.abs(delta)<1e-8){if(origin<min||origin>max){tmin=2;break;}}
+     else {let t1=(min-origin)/delta,t2=(max-origin)/delta;if(t1>t2){const tmp=t1;t1=t2;t2=tmp;}tmin=Math.max(tmin,t1);tmax=Math.min(tmax,t2);if(tmin>tmax){tmin=2;break;}}
+   }
+   if(tmin>0.015&&tmin<0.985&&tmin<=tmax)return false;
+ }
+ return true;
+}
+function startCombat(){if(!combatStarted){combatStarted=true;combatElapsed=0;showToast('BLACK CELLが接触を確認 — 部隊行動開始');updateHUD();}}
+function damage(n){hp-=n;shotShake=Math.min(1,shotShake+.8);$('damage').style.background='rgba(255,45,30,.24)';setTimeout(()=>$('damage').style.background='rgba(255,45,30,0)',100);updateHUD();if(hp<=0){hp=0;dead=true;document.exitPointerLock?.();$('overlay').style.display='flex';$('card').innerHTML='<div class="eyebrow">MISSION FAILED</div><h1>YOU ARE<br><span>DOWN</span></h1><div class="desc">第09区画での作戦は失敗した。<br>装備を整えて、もう一度出撃しよう。</div><button class="btn" onclick="location.reload()">再出撃</button>';}}
+function blocked(x,z){for(const o of obstacles){if(o.top<.65)continue;if(Math.abs(x-o.x)<o.hx+.38&&Math.abs(z-o.z)<o.hz+.38)return true}return false}
+function beginMortarBarrage(){if(mortarStarted)return;mortarStarted=true;nextMortarTime=missionElapsed;showToast('警告：迫撃砲の着弾を確認！ 移動して回避！');$('statusline').textContent='RADIO: INCOMING MORTAR FIRE // SEEK COVER';$('objective').textContent='OBJECTIVE: SURVIVE THE MORTAR BARRAGE';}
+function launchMortar(){const tx=THREE.MathUtils.clamp(camera.position.x+(Math.random()-.5)*58,-210,210),tz=THREE.MathUtils.clamp(camera.position.z+(Math.random()-.5)*68,-210,210);const start=new THREE.Vector3(tx+(Math.random()-.5)*7,42+Math.random()*10,tz+(Math.random()-.5)*7);const shell=new THREE.Mesh(new THREE.SphereGeometry(.16,7,6),new THREE.MeshBasicMaterial({color:0xffb76b}));shell.position.copy(start);scene.add(shell);const trailGeo=new THREE.BufferGeometry().setFromPoints([start,start.clone().add(new THREE.Vector3(0,-2,0))]);const trail=new THREE.Line(trailGeo,new THREE.LineBasicMaterial({color:0xff8b4d,transparent:true,opacity:.75}));scene.add(trail);mortarShells.push({m:shell,trail,from:start,to:new THREE.Vector3(tx,0,tz),t:0,duration:1.0+Math.random()*.55});}
+function mortarImpact(x,z){const flash=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),new THREE.MeshBasicMaterial({color:0xff8b45,transparent:true,opacity:.88}));flash.position.set(x,.55,z);scene.add(flash);const cloud=new THREE.Mesh(new THREE.SphereGeometry(1.6,8,6),new THREE.MeshBasicMaterial({color:0xdce8f2,transparent:true,opacity:.62,depthWrite:false}));cloud.position.set(x,.7,z);scene.add(cloud);const ring=new THREE.Mesh(new THREE.RingGeometry(1.0,1.5,20),new THREE.MeshBasicMaterial({color:0xe7f1fb,transparent:true,opacity:.7,side:THREE.DoubleSide,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.set(x,.08,z);scene.add(ring);explosions.push({flash,cloud,ring,t:0,duration:.72});const dist=Math.hypot(camera.position.x-x,camera.position.z-z);if(dist<5.2){damage(Math.max(8,44-dist*6));showToast('迫撃砲の爆風！ 走って離れろ！');}else if(dist<10){showToast('迫撃砲が近くに着弾！');}}
+function updateMortars(dt){if(missionElapsed>=30&&!mortarStarted)beginMortarBarrage();if(mortarStarted&&missionElapsed>=nextMortarTime){const count=1+(Math.random()<.55?1:0);for(let i=0;i<count;i++)launchMortar();nextMortarTime=missionElapsed+1.45+Math.random()*1.35;}
+ for(let i=mortarShells.length-1;i>=0;i--){const s=mortarShells[i];s.t+=dt;const u=Math.min(1,s.t/s.duration);s.m.position.lerpVectors(s.from,s.to,u);s.m.position.y=s.from.y*(1-u)+.3;const arr=s.trail.geometry.attributes.position;arr.setXYZ(0,s.m.position.x,s.m.position.y,s.m.position.z);arr.setXYZ(1,s.m.position.x-((s.from.x-s.to.x)*.02),s.m.position.y-2.4,s.m.position.z-((s.from.z-s.to.z)*.02));arr.needsUpdate=true;if(u>=1){mortarImpact(s.to.x,s.to.z);scene.remove(s.m);scene.remove(s.trail);s.mortarDone=true;mortarShells.splice(i,1);}}
+ for(let i=explosions.length-1;i>=0;i--){const e=explosions[i];e.t+=dt;const u=Math.min(1,e.t/e.duration);e.flash.scale.setScalar(.5+u*4);e.flash.material.opacity=.88*(1-u);e.cloud.scale.setScalar(1+u*3.2);e.cloud.position.y=.7+u*1.6;e.cloud.material.opacity=.62*(1-u);e.ring.scale.setScalar(1+u*3);e.ring.material.opacity=.7*(1-u);if(u>=1){scene.remove(e.flash);scene.remove(e.cloud);scene.remove(e.ring);explosions.splice(i,1);}}
+ for(const drift of snowDrift){const a=drift.geo.attributes.position;for(let i=0;i<a.count;i++){let x=a.getX(i),y=a.getY(i)-dt*2.4,z=a.getZ(i)+dt*.7;if(y<-.5){y=22+Math.random()*4;x=(Math.random()-.5)*80;z=(Math.random()-.5)*100;}if(Math.abs(x-camera.position.x)>42)x=camera.position.x+(Math.random()-.5)*80;if(Math.abs(z-camera.position.z)>52)z=camera.position.z+(Math.random()-.5)*100;a.setXYZ(i,x,y,z);}a.needsUpdate=true;drift.points.position.set(0,0,0);}
+}
+
+// ===== 武器：1=アサルトライフル 2=ナイフ 3=手榴弾 =====
+let slideT=0,slideS=0,slideF=1,weapon=1,grenades=4,propG=null,lastAlt=0,hf=null;const nades=[],gfx=[];
+function makeProp(){const g=new THREE.Group();const k=new THREE.Group();k.add(new THREE.Mesh(new THREE.BoxGeometry(.035,.02,.3),mat(0xc8d0d4,.3,.8)));const h=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,.12),mat(0x15191a));h.position.z=.2;k.add(h);g.add(k);const n=new THREE.Group();n.add(new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),mat(0x4b5a3a,.7)));const l=new THREE.Mesh(new THREE.BoxGeometry(.02,.02,.1),mat(0x999999,.4,.6));l.position.set(0,.08,0);n.add(l);g.add(n);g.traverse(o=>{if(o.isMesh)o.frustumCulled=false});return g}
+function setWeapon(w){if(reloading||w===weapon)return;weapon=w;if(w!==1){aiming=false;document.body.classList.remove('aiming');}$('weaponState').textContent=w===1?'BURST/AUTO • ENHANCED LOAD':w===2?'COMBAT KNIFE • 近接(静音・一撃)':'FRAG GRENADE • 投擲';showToast(['','アサルトライフル','ナイフ','手榴弾'][w]);updateHUD();}
+document.addEventListener('keydown',e=>{if((e.code==='ControlLeft'||e.code==='KeyC')&&!e.repeat&&started&&!dead&&slideT<=0&&(keys.ShiftLeft||keys.ShiftRight)){const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s2=(keys.KeyD?1:0)-(keys.KeyA?1:0);if(!f&&!s2)return;const l=Math.hypot(f,s2);slideF=f/l;slideS=s2/l;slideT=.9;crouched=false;aiming=false;document.body.classList.remove('aiming');shotShake=Math.max(shotShake,.4);showToast('スライディング');}});
+document.addEventListener('keydown',e=>{if(!started||dead||e.repeat)return;const w={Digit1:1,Digit2:2,Digit3:3}[e.code];if(w)setWeapon(w)});
+function hurtEnemy(e,d){e.hp-=d;if(e.hp<=0&&e.alive){e.alive=false;scene.remove(e.g);kills++;showToast('敵影を排除');updateHUD();}}
+function altAttack(){const now=performance.now();camera.getWorldDirection(forward);
+ if(weapon===2){if(now-lastAlt<520)return;lastAlt=now;weaponKick=1;shotShake=Math.max(shotShake,.7);recoil=1;yaw+=(Math.random()-.5)*.05;for(const e of enemies){if(!e.alive)continue;const dx=e.g.position.x-camera.position.x,dz=e.g.position.z-camera.position.z,d=Math.hypot(dx,dz);if(d<2.8&&(dx*forward.x+dz*forward.z)/(d||1)>.45){hurtEnemy(e,200);showToast('ナイフで制圧');break;}}}
+ else if(weapon===3){if(now-lastAlt<900||grenades<=0){if(grenades<=0&&now-lastAlt>900)showToast('手榴弾がない');return;}lastAlt=now;grenades--;weaponKick=1;recoil=2;shotShake=1;pitch=Math.min(1.35,pitch+.05);const m=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),mat(0x4b5a3a,.7));m.position.copy(camera.position).addScaledVector(forward,.6);scene.add(m);nades.push({m,vx:forward.x*15,vy:forward.y*15+3.5,vz:forward.z*15,t:2.3});updateHUD();}}
+function boom(x,y,z,en){const f=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.9}));f.position.set(x,y+.6,z);scene.add(f);gfx.push({f,t:0});shotShake=1;for(const e of enemies){if(!e.alive)continue;const d=Math.hypot(e.g.position.x-x,e.g.position.z-z);if(!en&&d<9)hurtEnemy(e,Math.round(160*(1-d/9)));}const dp=Math.hypot(camera.position.x-x,camera.position.z-z);if(dp<7)damage(Math.max(10,52-dp*7));alertNear({x,z},45,18);}
+function gearTick(dt){
+ scanTick(dt);
+ bulletTick(dt);
+ if(propG){propG.visible=weapon!==1;propG.children[0].visible=weapon===2;propG.children[1].visible=weapon===3;const k=weaponKick;propG.position.set(.26-(weapon===2?k*.22:0),-.28+(weapon===2?k*.04:-k*.16),-.5-(weapon===2?k*.35:0));propG.rotation.set(weapon===2?-.5+k*.9:0,0,weapon===2?-.4:0);}
+ for(let i=nades.length-1;i>=0;i--){const n=nades[i],m=n.m;n.vy-=22*dt;let nx=m.position.x+n.vx*dt,nz=m.position.z+n.vz*dt;if(blocked(nx,nz)){n.vx*=-.4;n.vz*=-.4;nx=m.position.x;nz=m.position.z;}m.position.set(nx,m.position.y+n.vy*dt,nz);const gy=(hf?hf(nx,nz):0)+.1;if(m.position.y<gy){m.position.y=gy;n.vy*=-.35;n.vx*=.7;n.vz*=.7;}n.t-=dt;if(n.t<=0){boom(nx,m.position.y,nz,n.en);scene.remove(m);nades.splice(i,1);}}
+ for(let i=gfx.length-1;i>=0;i--){const g=gfx[i];g.t+=dt;g.f.scale.setScalar(1+g.t*14);g.f.material.opacity=Math.max(0,.9-g.t*2);if(g.t>.45){scene.remove(g.f);gfx.splice(i,1);}}
+}
+// ===== 敵の戦闘機動：間合いを保ち、横移動し、回り込む =====
+function combatTarget(e,p,dist){
+ const cp=camera.position,d=dist||1,nx=(cp.x-p.x)/d,nz=(cp.z-p.z)/d,px=-nz,pz=nx;
+ if(missionElapsed>(e.nextSwitch||0)){e.strafeSign*=-1;e.nextSwitch=missionElapsed+1.2+Math.random()*2.5;}
+ const pref={rush:5,flank:13,hold:22,sniper:38}[e.style]||12,sg=e.strafeSign;
+ if(e.style!=='sniper'&&(e.style==='hold'||e.hp<55||(e.style==='flank'&&d<16))){
+  if(missionElapsed>(e.covT||0)){e.covT=missionElapsed+1.6;let best=null,bd=1e9;for(const o of obstacles){if(o.top<1.1||o.top>4.8)continue;const od=Math.hypot(o.x-p.x,o.z-p.z);if(od>28)continue;const ox=o.x-cp.x,oz=o.z-cp.z,ol=Math.hypot(ox,oz)||1,r=Math.max(o.hx,o.hz)+1.2,cx=o.x+ox/ol*r,cz=o.z+oz/ol*r;if(Math.hypot(cx-cp.x,cz-cp.z)<10)continue;const sc=od+Math.abs(Math.hypot(cx-cp.x,cz-cp.z)-pref)*.4;if(sc<bd&&!blocked(cx,cz)){bd=sc;best=[cx,cz];}}e.cov=best;}
+  if(e.cov){if(Math.hypot(e.cov[0]-p.x,e.cov[1]-p.z)>1.3)return[e.cov[0],e.cov[1]];return Math.sin(missionElapsed*.9+e.phase)>.35?[e.cov[0]+px*sg*2.2,e.cov[1]+pz*sg*2.2]:[p.x,p.z];}}
+ if(e.style==='sniper'&&d>18&&d<75)return[p.x,p.z];
+ if(d<pref-4)return[p.x-nx*7+px*sg*2,p.z-nz*7+pz*sg*2];
+ if(d>pref+4){const w=e.style==='flank'?14*sg:Math.sin(missionElapsed*2+e.phase)*3.5;return[cp.x+px*w,cp.z+pz*w];}
+ return[p.x+px*sg*5,p.z+pz*sg*5];
+}
+const fires=[];
+function dressMap(m){
+ const B={village:[-70,70,-85,22],industrial:[-100,100,-95,60],shibuya:[-70,70,-104,-54]}[m];if(!B)return;
+ const free=(x,z,r)=>{for(const o of obstacles){if(o.top<.65)continue;if(Math.abs(x-o.x)<o.hx+r&&Math.abs(z-o.z)<o.hz+r)return false}if(Math.hypot(x-camera.position.x,z-camera.position.z)<14)return false;if(intel.some(i=>Math.hypot(x-i.x,z-i.z)<6))return false;return !extract||Math.hypot(x-extract.x,z-extract.z)>8};
+ const bag=mat(0x6b6450,1),crate=mat(0x5a4a34,.9),drum=mat(0x3a4a50,.5,.5),fm=new THREE.MeshBasicMaterial({color:0xff8a2a});
+ for(let n=0,t=0;n<36&&t<500;t++){const x=B[0]+Math.random()*(B[1]-B[0]),z=B[2]+Math.random()*(B[3]-B[2]);if(!free(x,z,3))continue;n++;const k=n%4,w=Math.random()<.5;
+  if(k===0)box(x,.55,z,w?4.2:.9,1.1,w?.9:4.2,bag);
+  else if(k===1){box(x,.6,z,1.3,1.2,1.3,crate);if(Math.random()<.5)box(x+.1,1.75,z,1.1,1.1,1.1,crate);}
+  else if(k===2){box(x,.55,z,3.4,1.1,.9,bag);box(x+1.25,.55,z+1.8,.9,1.1,3,bag);}
+  else if(fires.length<4){box(x,.55,z,.7,1.1,.7,drum);box(x,1.15,z,.45,.12,.45,fm,false);const l=new THREE.PointLight(0xff8a35,1.6,12,2);l.position.set(x,1.7,z);scene.add(l);fires.push({l,ph:Math.random()*9});if(free(x+3,z+1.5,1))spawnEnemy(x+3,z+1.5);}
+  else box(x,.6,z,1.3,1.2,1.3,crate);}
+}
+
+function addWalls(m){
+ const B={village:[-75,75,-88,24],industrial:[-105,105,-98,64],shibuya:[-72,72,-106,-54],canyon:[-100,100,-100,60],forest:[-100,100,-100,60]}[m];if(!B)return;const wm=mat(0x5b5750,.95);
+ for(let n=0,t=0;n<(m==='canyon'?24:m==='forest'?8:34)&&t<900;t++){const x=B[0]+Math.random()*(B[1]-B[0]),z=B[2]+Math.random()*(B[3]-B[2]),L=7+Math.random()*9,H=3+Math.random()*1.5,w=Math.random()<.5,sx=w?L:.9,sz=w?.9:L;
+  let ok=Math.hypot(x-camera.position.x,z-camera.position.z)>14&&!intel.some(i=>Math.hypot(x-i.x,z-i.z)<7)&&(!extract||Math.hypot(x-extract.x,z-extract.z)>9)&&!enemies.some(e=>Math.hypot(e.g.position.x-x,e.g.position.z-z)<L/2+3);
+  for(const o of obstacles){if(!ok)break;if(o.top<.65)continue;if(Math.abs(x-o.x)<o.hx+sx/2+2.2&&Math.abs(z-o.z)<o.hz+sz/2+2.2)ok=false;}
+  if(!ok)continue;n++;const hs=hf?[hf(x,z),hf(x-sx/2,z-sz/2),hf(x+sx/2,z+sz/2)]:[0],lo=Math.min(...hs),hi=Math.max(...hs);box(x,lo+(H+hi-lo)/2-.3,z,sx,H+hi-lo,sz,wm);}
+}
+
+function placeEnemies(m){
+ const B={village:[-75,75,-88,24],industrial:[-105,105,-98,64],shibuya:[-72,72,-106,-54],canyon:[-100,100,-100,60],forest:[-100,100,-100,60]}[m];if(!B)return;const cp=camera.position;
+ const ok=(x,z,a,b)=>{const d=Math.hypot(x-cp.x,z-cp.z);return d>a&&d<b&&!blocked(x,z)&&!blocked(x+1,z)&&!blocked(x,z+1)};
+ const pick=(a,b)=>{for(let i=0;i<120;i++){const x=B[0]+Math.random()*(B[1]-B[0]),z=B[2]+Math.random()*(B[3]-B[2]);if(ok(x,z,a,b))return[x,z]}return null};
+ // 手前の見張り(3)／中距離の2人組(4組)／壁の陰の待ち伏せ(5)／遠方の高所・奥に狙撃手(3)
+ if(m==='shibuya')for(let i=0;i<6;i++){const x=(Math.random()-.5)*42,z=-46+Math.random()*58;if(ok(x,z,10,200))spawnEnemy(x,z,i%3?'hold':'rush');}
+ for(let i=0;i<3;i++){const q=pick(22,45);if(q)spawnEnemy(q[0],q[1],'hold');}
+ for(let i=0;i<4;i++){const q=pick(45,85);if(q){spawnEnemy(q[0],q[1],'hold');if(ok(q[0]+3,q[1]+2,0,999))spawnEnemy(q[0]+3,q[1]+2,'flank');}}
+ const ws=obstacles.filter(o=>o.top>2.5&&(o.hx>3||o.hz>3));
+ for(let i=0;i<5&&ws.length;i++){const o=ws[Math.floor(Math.random()*ws.length)],sg=Math.random()<.5?1:-1,h=o.hx>o.hz,x=h?o.x+(Math.random()-.5)*o.hx:o.x+sg*(o.hx+1.6),z=h?o.z+sg*(o.hz+1.6):o.z+(Math.random()-.5)*o.hz;if(ok(x,z,25,100))spawnEnemy(x,z,Math.random()<.5?'hold':'rush');}
+ const best=[];for(let i=0;i<260;i++){const q=pick(45,200);if(q)best.push([q[0],q[1],hf?hf(q[0],q[1]):Math.hypot(q[0]-cp.x,q[1]-cp.z)]);}
+ best.sort((a,b)=>b[2]-a[2]);const used=[];for(const q of best){if(used.length>=3)break;if(used.some(u=>Math.hypot(u[0]-q[0],u[1]-q[1])<35))continue;used.push(q);spawnEnemy(q[0],q[1],'sniper');}
+}
+
+// ===== 弾道：重力で落ちる実体弾（飛翔時間あり）＋ヘッドショット・キルカメラ =====
+let kc=null,timeScale=1,lastKc=-99;const bullets=[],sparkG=new THREE.SphereGeometry(.07,5,5),
+ tracerG=new THREE.CylinderGeometry(.018,.025,.20,8),tracerM=new THREE.MeshStandardMaterial({color:0xc8a15a,roughness:.32,metalness:.78}),sparkM=new THREE.MeshBasicMaterial({color:0xffb86b});
+const bulletTipG=new THREE.ConeGeometry(.018,.055,8),bulletTipM=new THREE.MeshStandardMaterial({color:0x80523a,roughness:.28,metalness:.72});
+function spark(p){const m=new THREE.Mesh(sparkG,sparkM);m.position.copy(p);scene.add(m);particles.push({m,t:.12});}
+function fireBullet(){
+ camera.updateMatrixWorld(true);camera.getWorldDirection(forward);
+ const sp=(aiming?.0015:.01)+recoil*.004,d=forward.clone();d.x+=(Math.random()-.5)*sp*2;d.y+=(Math.random()-.5)*sp*2;d.z+=(Math.random()-.5)*sp*2;d.normalize();
+ const m=new THREE.Group();const casing=new THREE.Mesh(tracerG,tracerM);casing.rotation.x=Math.PI/2;m.add(casing);
+ const tip=new THREE.Mesh(bulletTipG,bulletTipM);tip.rotation.x=Math.PI/2;tip.position.z=.115;m.add(tip);
+ const pos=camera.position.clone().addScaledVector(d,.9);pos.y-=.12;m.position.copy(pos);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,-1),d);scene.add(m);
+ bullets.push({m,pos,v:d.multiplyScalar(170),t:0,trail:[camera.position.clone()],org:camera.position.clone()});
+}
+function startKillcam(b,e,far){
+ const pts=b.trail.slice();if(pts.length<3)pts.splice(1,0,pts[0].clone().lerp(pts[pts.length-1],.5));
+ const bm=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.24,8),new THREE.MeshBasicMaterial({color:0xffd27a}));bm.scale.setScalar(2);scene.add(bm);
+ kc={curve:new THREE.CatmullRomCurve3(pts),head:pts[pts.length-1].clone(),e,t:0,hit:false,bm,a:0,cam:new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.05,600)};timeScale=.2;document.body.classList.add('kcam');showToast('LONG RANGE HEADSHOT — '+Math.round(far)+'m');}
+function kcTick(rdt){
+ if(!kc)return;kc.t+=rdt;const T1=1.7,cam=kc.cam,up=new THREE.Vector3(0,1,0);
+ if(kc.t<T1){const x=kc.t/T1,u=Math.min(.999,1-Math.pow(1-x,1.7)),pos=kc.curve.getPoint(u),dir=kc.curve.getTangent(u),side=new THREE.Vector3().crossVectors(dir,up).normalize().multiplyScalar(.7*(1-u)+.15);
+  cam.position.copy(pos).addScaledVector(dir,-1.7).add(side);cam.position.y+=.35;cam.lookAt(pos.clone().addScaledVector(dir,5).lerp(kc.head,u*u));cam.fov=52-26*u;cam.updateProjectionMatrix();
+  kc.bm.position.copy(pos);kc.bm.lookAt(pos.clone().add(dir));kc.bm.rotateX(Math.PI/2);}
+ else{if(!kc.hit){kc.hit=true;scene.remove(kc.bm);shotShake=1;for(let i=0;i<10;i++){const q=kc.head.clone();q.x+=(Math.random()-.5)*.6;q.y+=(Math.random()-.5)*.6;q.z+=(Math.random()-.5)*.6;spark(q);}
+   const f=new THREE.Mesh(new THREE.SphereGeometry(.15,10,8),new THREE.MeshBasicMaterial({color:0xfff0d0,transparent:true,opacity:.9}));f.position.copy(kc.head);scene.add(f);gfx.push({f,t:0});const bp=kc.curve.getPoint(.9);kc.a=Math.atan2(-(kc.head.x-bp.x),-(kc.head.z-bp.z));}
+  const w=kc.t-T1,r=2.8-Math.min(1,w/1.6)*.9;kc.a+=rdt;cam.position.set(kc.head.x+Math.sin(kc.a)*r,kc.head.y+.3+w*.1,kc.head.z+Math.cos(kc.a)*r);cam.lookAt(kc.head);cam.fov=30-6*Math.min(1,w);cam.updateProjectionMatrix();kc.e.g.rotation.x=Math.min(1.45,w*1.6);}
+ if(kc.t>3.6){kc.e.g.rotation.x=1.45;if(kc.bm.parent)scene.remove(kc.bm);kc=null;timeScale=1;document.body.classList.remove('kcam');}}
+function bulletTick(dt){
+ for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];b.t+=dt;let dead=b.t>1.8;const n=Math.max(1,Math.ceil(170*dt/1.2)),sb=dt/n;
+  for(let k=0;k<n&&!dead;k++){
+   b.pos.addScaledVector(b.v,sb);b.v.y-=6*sb;const p=b.pos;if(k%2===0&&b.trail.length<160)b.trail.push(p.clone());
+   if(p.y<(hf?hf(p.x,p.z):0)){spark(p);dead=true;break;}
+   for(const o of obstacles){if(p.y>o.bottom&&p.y<o.top&&Math.abs(p.x-o.x)<o.hx&&Math.abs(p.z-o.z)<o.hz){spark(p);dead=true;break;}}
+   if(dead)break;
+   for(const e of enemies){if(!e.alive)continue;const q=e.g.position,h=e.crouched?1.5:2.05;if(p.y>q.y&&p.y<q.y+h&&Math.hypot(p.x-q.x,p.z-q.z)<.5){const head=p.y>q.y+h-.42,far=Math.hypot(q.x-b.org.x,q.z-b.org.z);spark(p);
+     if(head&&far>20&&!kc&&missionElapsed-lastKc>8){lastKc=missionElapsed;e.hp=0;e.alive=false;kills++;updateHUD();b.trail.push(new THREE.Vector3(q.x,q.y+h-.2,q.z));startKillcam(b,e,far);setTimeout(()=>scene.remove(e.g),5000);}
+     else{hurtEnemy(e,head?120:34);if(head)showToast('ヘッドショット！');}
+     dead=true;break;}}
+  }
+  b.m.position.copy(b.pos);b.m.lookAt(b.pos.x+b.v.x,b.pos.y+b.v.y,b.pos.z+b.v.z);
+  if(dead){scene.remove(b.m);bullets.splice(i,1);}
+ }
+}
+
+function turnTo(e,a,dt){let d=a-e.g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));e.g.rotation.y+=d*Math.min(1,dt*9);}
+function throwEnemyNade(e,p){const cp=camera.position,dx=cp.x-p.x+(Math.random()-.5)*4,dz=cp.z-p.z+(Math.random()-.5)*4,T=Math.max(.7,Math.hypot(dx,dz)/13),m=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),mat(0x3a4a32,.7));m.position.set(p.x,p.y+1.6,p.z);scene.add(m);nades.push({m,vx:dx/T,vy:11*T,vz:dz/T,t:2.4,en:true});showToast('手榴弾！ 逃げろ');}
+
+// ===== 戦術スキャン(Q)：周囲70m以内の敵を壁越しに7秒間マーキング（クールダウン28秒）=====
+let scanCd=0;const marks=[],waves=[],markG=new THREE.OctahedronGeometry(.28),markM=new THREE.MeshBasicMaterial({color:0xff3b30,depthTest:false,transparent:true,opacity:.9});
+document.addEventListener('keydown',e=>{if(e.code!=='KeyQ'||e.repeat||!started||dead||paused)return;if(scanCd>0){showToast('スキャン再使用まで '+Math.ceil(scanCd)+'秒');return;}scanCd=28;let n=0;const cp=camera.position;
+ for(const en of enemies){if(!en.alive||Math.hypot(en.g.position.x-cp.x,en.g.position.z-cp.z)>70)continue;const m=new THREE.Mesh(markG,markM);m.renderOrder=999;scene.add(m);marks.push({m,en,t:7});n++;}
+ const r=new THREE.Mesh(new THREE.RingGeometry(.5,.6,48),new THREE.MeshBasicMaterial({color:0x6ff0ff,transparent:true,opacity:.8,side:THREE.DoubleSide,depthTest:false}));r.rotation.x=-Math.PI/2;r.position.set(cp.x,cp.y-1.4,cp.z);r.renderOrder=998;scene.add(r);waves.push({f:r,t:0});
+ showToast(n?'スキャン：敵 '+n+' 体を検知（7秒）':'スキャン：周囲70mに敵影なし');});
+function scanTick(dt){scanCd=Math.max(0,scanCd-dt);
+ for(let i=marks.length-1;i>=0;i--){const k=marks[i];k.t-=dt;if(k.t<=0||!k.en.alive){scene.remove(k.m);marks.splice(i,1);continue;}const q=k.en.g.position;k.m.position.set(q.x,q.y+2.5,q.z);k.m.rotation.y+=dt*3;}
+ for(let i=waves.length-1;i>=0;i--){const w=waves[i];w.t+=dt;w.f.scale.setScalar(1+w.t*70);w.f.material.opacity=Math.max(0,.8-w.t*.8);if(w.t>1){scene.remove(w.f);waves.splice(i,1);}}}
+
+// ===== MISSION: 機密資料3つ回収 → 脱出ビーコン。サーチライト塔と資料の護衛で各マップに目的と緊張感を追加 =====
+const intel=[],lights=[];let intelGot=0,extract=null,won=false;
+function setupMission(m){
+ const C={village:{i:[[-34,-12],[36,-42],[0,-84]],e:[0,29],t:[[-30,-48],[36,-30]]},industrial:{i:[[-48,-38],[52,-44],[0,-86]],e:[0,72],t:[[-60,10],[60,-10]]},canyon:{i:[[-45,-10],[20,-40],[0,-95]],e:[0,70],t:[]},forest:{i:[[-40,-30],[35,-50],[-5,-90]],e:[0,70],t:[]},shibuya:{i:[[-3,-25.5],[3,-36.5],[0,-90]],e:[0,19],t:[[-24,-70],[24,-62]]}}[m];
+ if(!C)return;
+ const beam=new THREE.MeshBasicMaterial({color:0xffd24a,transparent:true,opacity:.35,depthWrite:false});
+ for(const [x,z] of C.i){const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.BoxGeometry(.5,.08,.36),new THREE.MeshStandardMaterial({color:0xffe08a,emissive:0xffb020,emissiveIntensity:1.2})));const b=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,16,8,1,true),beam);b.position.y=8;g.add(b);g.position.set(x,.9+(hf?hf(x,z):0),z);scene.add(g);intel.push({g,x,z,on:true});const l=new THREE.PointLight(0xffc040,1.2,9,2);l.position.set(x,1.6+(hf?hf(x,z):0),z);scene.add(l);if(!blocked(x+4,z-3))spawnEnemy(x+4,z-3);if(!blocked(x-4,z+3))spawnEnemy(x-4,z+3);}
+ for(const [x,z] of C.t){box(x,5,z,.6,10,.6,mats.metal);box(x,10.2,z,2.6,.3,2.6,mats.dark,false);box(x,10.9,z,.7,.5,.7,new THREE.MeshBasicMaterial({color:0xfff2c0}),false);const sp=new THREE.SpotLight(0xfff0c8,60,70,.2,.5,1);sp.position.set(x,10.8,z);scene.add(sp);scene.add(sp.target);lights.push({x,z,sp,a:Math.random()*6,cd:0});}
+ extract={x:C.e[0],z:C.e[1],m:new THREE.Mesh(new THREE.CylinderGeometry(1.8,1.8,18,16,1,true),new THREE.MeshBasicMaterial({color:0xff5a4a,transparent:true,opacity:.28,depthWrite:false,side:THREE.DoubleSide}))};extract.m.position.set(C.e[0],9+(hf?hf(C.e[0],C.e[1]):0),C.e[1]);extract.m.visible=false;scene.add(extract.m);
+}
+function alertNear(cp,r,t){for(const e of enemies)if(e.alive&&Math.hypot(e.g.position.x-cp.x,e.g.position.z-cp.z)<r){e.alerted=true;e.investigating=true;e.lastKnownX=cp.x;e.lastKnownZ=cp.z;e.searchTimer=t;}startCombat();}
+function missionTick(dt){
+ for(const f of fires)f.l.intensity=1.4+Math.sin(missionElapsed*13+f.ph)*.35+Math.random()*.3;
+ if(!extract||won)return;const cp=camera.position;
+ for(const L of lights){L.a+=dt*.55;const tx=L.x+Math.cos(L.a)*30,tz=L.z+Math.sin(L.a)*30;L.sp.target.position.set(tx,0,tz);L.sp.target.updateMatrixWorld();L.cd-=dt;
+  if(L.cd<=0&&Math.hypot(cp.x-tx,cp.z-tz)<5.5&&hasLineOfSight(L.x,10.8,L.z,cp.x,cp.y,cp.z)){L.cd=6;showToast('サーチライトに捕捉された！ 敵が向かってくる');alertNear(cp,45,20);}}
+ for(const it of intel){if(!it.on)continue;it.g.children[0].rotation.y+=dt*2;if(Math.hypot(cp.x-it.x,cp.z-it.z)<1.9){it.on=false;scene.remove(it.g);intelGot++;if(intelGot===intel.length){extract.m.material.color.setHex(0x55f0ff);extract.m.visible=true;showToast('全資料回収 — BLACK CELL全部隊が警戒態勢！ 脱出ビーコンへ走れ');alertNear(cp,110,25);}else showToast('機密資料を回収 '+intelGot+'/'+intel.length);}}
+ const nd=Math.min(999,...intel.filter(i=>i.on).map(i=>Math.hypot(cp.x-i.x,cp.z-i.z)));$('objective').textContent=intelGot<intel.length?'目標: 機密資料を回収 ('+intelGot+'/'+intel.length+') 最寄り '+Math.round(nd)+'m':'目標: 青い脱出ビーコンへ '+Math.round(Math.hypot(cp.x-extract.x,cp.z-extract.z))+'m';
+ if(intelGot===intel.length&&Math.hypot(cp.x-extract.x,cp.z-extract.z)<3.5){won=true;dead=true;document.exitPointerLock?.();$('overlay').style.display='flex';$('card').innerHTML='<div class="eyebrow">MISSION COMPLETE</div><h1>EXTRACTION<br><span>CONFIRMED</span></h1><div class="desc">資料 '+intel.length+'/'+intel.length+' 回収／撃破 '+kills+'／作戦時間 '+$('recTime').textContent+'／残りHP '+Math.round(hp)+'／ランク '+(missionElapsed<480&&hp>60?'S':missionElapsed<900?'A':'B')+'</div><button class="btn" onclick="location.reload()">もう一度出撃</button>';}
+}
+function drawMissionMap(g,sx,sy){if(!extract)return;g.fillStyle='#ffd24a';for(const i of intel)if(i.on){g.fillRect(Math.max(6,Math.min(144,sx(i.x)))-3,Math.max(6,Math.min(144,sy(i.z)))-3,6,6)}g.strokeStyle=intelGot===intel.length?'#55f0ff':'#ff5a4a';g.lineWidth=2;g.beginPath();g.arc(Math.max(8,Math.min(142,sx(extract.x))),Math.max(8,Math.min(142,sy(extract.z))),5,0,7);g.stroke();g.lineWidth=1}
+function animate(){if(!started||dead)return;requestAnimationFrame(animate);const rdt=Math.min(clock.getDelta(),.04),dt=rdt*timeScale;if(!paused){if(nvgOn){nvgBattery=Math.max(0,nvgBattery-dt);if(nvgBattery<=0){nvgOn=false;nvgLocked=true;document.body.classList.remove('nvg');hemiLight.intensity=.95;scene.fog.color.setHex(0x151b22);scene.fog.density=.014;showToast('暗視ゴーグルのバッテリー切れ');}updateGearStatus();}camera.updateMatrixWorld(true);const lightPos=new THREE.Vector3();const lightDir=new THREE.Vector3();camera.getWorldPosition(lightPos);camera.getWorldDirection(lightDir);if(flashSpot){flashSpot.position.copy(lightPos).addScaledVector(lightDir,.18);flashSpot.target.position.copy(lightPos).addScaledVector(lightDir,24);flashSpot.target.updateMatrixWorld();}if(flashFill)flashFill.position.copy(lightPos).addScaledVector(lightDir,.25);missionElapsed+=dt;if(currentMap==='ski')updateMortars(dt);if(combatStarted)combatElapsed+=dt;const mm=String(Math.floor(missionElapsed/60)).padStart(2,'0'),ss=String(Math.floor(missionElapsed%60)).padStart(2,'0');$('recTime').textContent=mm+':'+ss;if(shooting)shoot();let speed=(keys.ShiftLeft||keys.ShiftRight?4.5:2.15)*(crouched?.55:1)*(aiming?.62:1);if(slideT>0)speed=7.5*(.35+.65*slideT/.9);let strafe=0,forwardMove=0;if(keys.KeyW)forwardMove+=1;if(keys.KeyS)forwardMove-=1;if(keys.KeyA)strafe-=1;if(keys.KeyD)strafe+=1;const len=Math.hypot(strafe,forwardMove)||1;strafe/=len;forwardMove/=len;if(slideT>0){strafe=slideS;forwardMove=slideF;slideT-=dt;}const fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);const nx=camera.position.x+(fx*forwardMove+rx*strafe)*speed*dt,nz=camera.position.z+(fz*forwardMove+rz*strafe)*speed*dt;if(!blocked(nx,camera.position.z))camera.position.x=THREE.MathUtils.clamp(nx,currentMap==='ski'?-218:currentMap==='industrial'?-120:currentMap==='canyon'||currentMap==='forest'?-110:-86,currentMap==='ski'?218:currentMap==='industrial'?120:currentMap==='canyon'||currentMap==='forest'?110:86);if(!blocked(camera.position.x,nz))camera.position.z=THREE.MathUtils.clamp(nz,currentMap==='ski'?-218:currentMap==='industrial'?-120:currentMap==='canyon'||currentMap==='forest'?-110:-86,currentMap==='ski'?218:currentMap==='industrial'?120:currentMap==='canyon'||currentMap==='forest'?110:86);const moving=!!(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD);if(moving){playerProfile.samples++;playerProfile.moveX+=Math.sign(fx*forwardMove+rx*strafe);playerProfile.moveZ+=Math.sign(fz*forwardMove+rz*strafe);}if(keys.ShiftLeft||keys.ShiftRight)playerProfile.sprint+=dt;if(crouched)playerProfile.crouch+=dt;learnTimer+=dt;if(learnTimer>4){learnTimer=0;const n=Math.max(1,playerProfile.samples);const sprintRate=playerProfile.sprint/Math.max(1,missionElapsed);const crouchRate=playerProfile.crouch/Math.max(1,missionElapsed);playerProfile.flank=THREE.MathUtils.clamp(.25+sprintRate*.55+playerProfile.aggression*.25,.2,.9);playerProfile.search=THREE.MathUtils.clamp(.35+crouchRate*.35+playerProfile.aggression*.2,.25,.85);for(const e of enemies){if(!e.alive)continue;e.adaptFlank=playerProfile.flank;e.adaptSearch=playerProfile.search;} }if(viewWeapon){viewWeapon.visible=weapon===1&&!aiming;viewWeapon.position.y=(moving?Math.sin(missionElapsed*9)*.018:Math.sin(missionElapsed*1.8)*.008);viewWeapon.position.x=moving?Math.cos(missionElapsed*4.5)*.012:0;viewWeapon.position.z=aiming?-.08:0;}
+ camera.position.y=(hf?hf(camera.position.x,camera.position.z):0)+(slideT>0?.75:crouched?1.02:1.7)+(moving?Math.sin(missionElapsed*7.5)*(aiming?.012:.05):Math.sin(missionElapsed*1.4)*.008);
+ camera.rotation.z=THREE.MathUtils.lerp(camera.rotation.z, moving?(keys.KeyA?-.008:keys.KeyD?.008:0):0,Math.min(1,dt*4));
+ camera.fov=THREE.MathUtils.lerp(camera.fov,aiming?36:(slideT>0?102:92),Math.min(1,dt*5));camera.updateProjectionMatrix();
+ recoil=Math.max(0,recoil-dt*2.7);weaponKick=Math.max(0,weaponKick-dt*3.8);shotShake=Math.max(0,shotShake-dt*3.2);
+ if(viewWeapon){const bob=moving?Math.sin(missionElapsed*8.5)*.022:Math.sin(missionElapsed*1.6)*.005;viewWeapon.position.x=THREE.MathUtils.lerp(viewWeapon.position.x, (aiming?.1:.24)+(Math.random()-.5)*shotShake*.012,Math.min(1,dt*12));viewWeapon.position.y=THREE.MathUtils.lerp(viewWeapon.position.y,(aiming?-.2:-.27)+bob-weaponKick*.12,Math.min(1,dt*18));viewWeapon.position.z=THREE.MathUtils.lerp(viewWeapon.position.z,(aiming?-.5:-.58)+weaponKick*.20,Math.min(1,dt*18));viewWeapon.rotation.x=THREE.MathUtils.lerp(viewWeapon.rotation.x,-weaponKick*.10,Math.min(1,dt*20));viewWeapon.rotation.y=THREE.MathUtils.lerp(viewWeapon.rotation.y,(Math.random()-.5)*shotShake*.025,Math.min(1,dt*18));viewWeapon.rotation.z=THREE.MathUtils.lerp(viewWeapon.rotation.z,(moving?(keys.KeyA?.035:keys.KeyD?-.035:0):0)+(Math.random()-.5)*shotShake*.025,Math.min(1,dt*10));}
+ // Short, punchy recoil plus subtle camera shake; stronger when firing full-auto.
+ camera.rotation.x=THREE.MathUtils.clamp(pitch+recoil*(aiming?.035:.07)+(Math.random()-.5)*shotShake*.012, -1.35,1.35);camera.rotation.y=yaw+(Math.random()-.5)*shotShake*.012;
+ camera.rotation.z=THREE.MathUtils.lerp(camera.rotation.z,(moving?(keys.KeyA?-.012:keys.KeyD?.012:0):0)+(Math.random()-.5)*shotShake*.03,Math.min(1,dt*16));
+ if(laserLine&&(flashlightOn||aiming)){camera.updateMatrixWorld(true);const origin=new THREE.Vector3();camera.getWorldPosition(origin);camera.getWorldDirection(forward);let end=origin.clone().addScaledVector(forward,26);const solid=obstacles.map(o=>o.obj).filter(Boolean);raycaster.set(origin,forward);raycaster.far=26;const hits=raycaster.intersectObjects(solid,false);if(hits.length)end.copy(hits[0].point);laserLine.geometry.setFromPoints([origin,end]);laserLine.geometry.attributes.position.needsUpdate=true;}
+ const now=performance.now();for(const e of enemies){if(!e.alive)continue;e.phase+=dt*(e.spd||0)*2.6;e.crouchTimer-=dt;if(e.crouchTimer<=0&&(e.crouchTimer=.5,true)&&e.crouched!==(e.alerted&&(e.spd||0)<.1&&e.style!=='rush'&&!e.investigating)&&(e.crouched=!e.crouched,true)){e.torso.position.y=e.crouched?.82:1.15;e.head.position.y=e.crouched?1.35:1.88;e.visor.position.y=e.crouched?1.37:1.9;e.gun.position.y=e.crouched?.96:1.3;for(const leg of e.legs){leg.position.y=e.crouched?.62:.83;leg.scale.y=e.crouched?.78:1;}for(const a of e.arms)a.position.y=e.crouched?1.28:1.55;}{const sp=e.spd||0,amp=Math.min(.95,.12+sp*.28);for(let i=0;i<e.legs.length;i++)e.legs[i].rotation.x=e.crouched?0:(sp>.05?Math.sin(e.phase+i*Math.PI)*amp:0);e.torso.position.y=(e.crouched?.82:1.15)+(sp>.05?Math.abs(Math.sin(e.phase))*Math.min(.05,sp*.014):0);for(let i=0;i<2;i++)e.arms[i].rotation.z=(i?1:-1)*.2*0+(i?.2:-.2)+Math.sin(e.phase+i)*.03*sp;}const p=e.g.position,dxp=camera.position.x-p.x,dzp=camera.position.z-p.z,dist=Math.hypot(dxp,dzp);
+ const eyeY=p.y+(e.crouched?1.18:1.62);
+ const detectionRange=(crouched?14:24)*(e.style==='sniper'?1.8:1);
+ const seesPlayer=dist<detectionRange&&hasLineOfSight(p.x,eyeY,p.z,camera.position.x,camera.position.y,camera.position.z);
+ // Clear visual contact gives away the exact position. A loud shot instead starts a search.
+ if(seesPlayer){if(!e.alerted||e.investigating){e.alerted=true;e.investigating=false;e.lastKnownX=camera.position.x;e.lastKnownZ=camera.position.z;e.searchTimer=28;e.fire=Math.min(e.fire,.7+Math.random()*.6);startCombat();showToast('BLACK CELLに発見された！ 制圧射撃・側面移動開始！');$('statusline').textContent='RADIO: BLACK CELL CONTACT // MULTIPLE HOSTILES';
+   // Squad-wide response: nearby operators receive the contact call and converge on the last known position.
+   for(const ally of enemies){if(ally===e||!ally.alive)continue;const ad=ally.g.position.distanceTo(e.g.position);if(ad<18&&!ally.alerted){ally.alerted=true;ally.investigating=true;ally.lastKnownX=camera.position.x;ally.lastKnownZ=camera.position.z;ally.searchTimer=24;ally.fire=Math.min(ally.fire,.8+Math.random()*.6);}}$('statusline').textContent='RADIO: BLACK CELL CONTACT // TAKING HEAVY FIRE';}else{e.lastKnownX=camera.position.x;e.lastKnownZ=camera.position.z;e.searchTimer=12;}}
+ if(e.alerted)e.searchTimer=Math.max(0,e.searchTimer-dt);
+ // Patrol routes are local and irregular. When a soldier reaches a point or waits too long,
+ // it chooses a new point; if it hears a shot, it searches the sound source before pursuing.
+ let tx=e.patrolX,tz=e.patrolZ;
+ if(e.alerted){
+   if(e.investigating){tx=e.lastKnownX;tz=e.lastKnownZ;if(Math.hypot(tx-p.x,tz-p.z)<2.2||e.searchTimer<=0){e.investigating=false;e.searchTimer=5+Math.random()*5;e.patrolTimer=1;}}
+   else if(seesPlayer){[tx,tz]=combatTarget(e,p,dist);}
+   else if(e.searchTimer>0){if(!e.sp||Math.hypot(e.sp.x-p.x,e.sp.z-p.z)<1.5){const a=Math.random()*6.28,r=3+Math.random()*9;e.sp={x:e.lastKnownX+Math.cos(a)*r,z:e.lastKnownZ+Math.sin(a)*r};}tx=e.sp.x;tz=e.sp.z;}
+   else {e.alerted=false;e.investigating=false;e.patrolTimer=.5+Math.random()*2;}
+ }
+ const ex=tx-p.x,ez=tz-p.z,ed=Math.hypot(ex,ez);
+ if(ed>.9){
+   const adaptiveFlank=e.adaptFlank||.35;const rate=e.alerted ? (e.investigating?2.4:2.8+adaptiveFlank*.4) : .7;
+   e.spd=rate;const mx=ex/ed*dt*rate,mz=ez/ed*dt*rate;
+   if(!blocked(p.x+mx,p.z))p.x+=mx;
+   if(!blocked(p.x,p.z+mz))p.z+=mz;
+   if(!e.alerted||e.investigating)turnTo(e,Math.atan2(-ex,-ez),dt);
+ } else {e.spd=0;if(!e.alerted)e.patrolTimer-=dt;}
+ e.patrolTimer-=dt;
+ if(!e.alerted&&e.patrolTimer<=0){
+   // Pick nearby reachable points so patrols keep moving instead of getting stuck at a wall.
+   for(let tries=0;tries<8;tries++){const tx2=e.hx+(Math.random()-.5)*26,tz2=e.hz+(Math.random()-.5)*26;if(!blocked(tx2,tz2)){e.patrolX=tx2;e.patrolZ=tz2;break;}}
+   e.patrolTimer=4+Math.random()*7;
+ }
+ if(e.alerted&&!e.investigating)turnTo(e,Math.atan2(-dxp,-dzp),dt);if(hf)p.y=hf(p.x,p.z);
+ e.fire-=dt;e.gren=(e.gren===undefined?10+Math.random()*12:e.gren)-dt;if(e.alerted&&!e.investigating&&e.gren<=0&&dist>9&&dist<32&&e.style!=='sniper'){e.gren=16+Math.random()*14;throwEnemyNade(e,p);}
+ // Enemies visibly fire at a known target. Cover blocks damage; it does not disable their firing behavior.
+ if(e.alerted&&!e.investigating&&dist<(e.style==='sniper'?80:52)&&e.fire<=0){e.fire=e.style==='sniper'?2.4+Math.random()*1.2:.8+Math.random()*.7;const muzzle=new THREE.Mesh(new THREE.SphereGeometry(.105,6,5),new THREE.MeshBasicMaterial({color:0xffc56b}));muzzle.position.set(p.x+Math.sin(e.g.rotation.y)*.48, p.y+(e.crouched?.98:1.31),p.z+Math.cos(e.g.rotation.y)*.48);scene.add(muzzle);particles.push({m:muzzle,t:.09});if(seesPlayer){const start=new THREE.Vector3(muzzle.position.x,muzzle.position.y,muzzle.position.z);const end=camera.position.clone();const enemyRay=end.clone().sub(start);const enemyDist=enemyRay.length();enemyRay.normalize();raycaster.set(start,enemyRay);raycaster.far=Math.max(0,enemyDist-.35);const coverHits=raycaster.intersectObjects(obstacles.map(o=>o.obj).filter(o=>o&&o.visible),false);const blockedByCover=coverHits.length>0&&coverHits[0].distance<enemyDist-.35;if(!blockedByCover){const lineGeo=new THREE.BufferGeometry().setFromPoints([start,end]);const line=new THREE.Line(lineGeo,new THREE.LineBasicMaterial({color:0xff654f,transparent:true,opacity:.9}));scene.add(line);tracers.push({m:line,t:.10});if(Math.random()<.65)damage(e.style==='sniper'?16+Math.random()*10:8+Math.random()*9);if(Math.random()<.35)showToast('BLACK CELLの制圧射撃！ 遮蔽物へ！');}}else{e.lastKnownX=camera.position.x;e.lastKnownZ=camera.position.z;}}}
+ for(const item of pickups){if(!item.active)continue;if(Math.hypot(camera.position.x-item.g.position.x,camera.position.z-item.g.position.z)<1.7){item.active=false;scene.remove(item.g);if(item.type==='med'){hp=Math.min(100,hp+30);showToast('医療キット回収 +30 HP')}else{reserve+=30;showToast('弾薬回収 +30')}updateHUD();}}drawMiniMap();for(let i=tracers.length-1;i>=0;i--){tracers[i].t-=dt;if(tracers[i].t<=0){scene.remove(tracers[i].m);tracers.splice(i,1)}}for(let i=particles.length-1;i>=0;i--){particles[i].t-=dt;if(particles[i].t<=0){scene.remove(particles[i].m);particles.splice(i,1)}}if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').style.opacity=0}if(enemies.every(e=>!e.alive)){$('message').textContent='BLACK CELL NEUTRALIZED';$('message').style.opacity=1;void 0} }
+ if(netConnected&&performance.now()-lastNetSend>70){lastNetSend=performance.now();sendNet({type:'state',x:camera.position.x,z:camera.position.z,yaw:yaw,hp:hp,map:currentMap});}
+ if(!paused){gearTick(dt);missionTick(dt);}kcTick(rdt);renderer.render(scene,kc?kc.cam:camera)}
+function drawMiniMap(){const c=$('mini');if(!c)return;const g=c.getContext('2d');g.clearRect(0,0,150,150);g.fillStyle='rgba(5,13,17,.92)';g.fillRect(0,0,150,150);g.strokeStyle='rgba(120,160,160,.2)';for(let i=10;i<150;i+=20){g.beginPath();g.moveTo(i,0);g.lineTo(i,150);g.moveTo(0,i);g.lineTo(150,i);g.stroke()}const mapScale=currentMap==='ski'?.48:currentMap==='village'||currentMap==='canyon'||currentMap==='forest'?1.0:1.6;const sx=x=>75+(x-camera.position.x)*mapScale, sy=z=>75+(z-camera.position.z)*mapScale;g.fillStyle='#7d8581';for(const o of obstacles){if(o.hx>1.8||o.hz>1.8){const x=sx(o.x),y=sy(o.z);if(x>-30&&x<180&&y>-30&&y<180)g.fillRect(x-o.hx*mapScale,y-o.hz*mapScale,o.hx*2*mapScale,o.hz*2*mapScale)}}for(const e of enemies){if(!e.alive)continue;const x=sx(e.g.position.x),y=sy(e.g.position.z);if(e.alerted&&Math.hypot(x-75,y-75)<45&&x>0&&x<150&&y>0&&y<150){g.fillStyle=e.alerted?'#ff554b':'#d3b66c';g.beginPath();g.arc(x,y,e.alerted?3.5:2.5,0,Math.PI*2);g.fill()}}drawMissionMap(g,sx,sy);g.save();g.translate(75,75);g.rotate(-yaw);g.fillStyle='#72f4ef';g.beginPath();g.moveTo(0,-7);g.lineTo(-4,5);g.lineTo(0,3);g.lineTo(4,5);g.closePath();g.fill();g.restore();g.strokeStyle='#d7faff';g.strokeRect(1,1,148,148)}
+function resize(){if(!camera||!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(Math.floor(innerWidth*.9),Math.floor(innerHeight*.9),false);renderer.domElement.style.width='100vw';renderer.domElement.style.height='100vh'}
+$('createRoom').addEventListener('click',()=>connectRoom(true));$('joinRoom').addEventListener('click',()=>connectRoom(false));
+function selectMap(id,map,note){selectedMap=map;for(const key of ['mapShibuya','mapIndustrial','mapSki','mapCanyon','mapForest'])$(key).classList.toggle('selected',key===id);$('mapNote').textContent=note;} $('mapShibuya').addEventListener('click',()=>selectMap('mapShibuya','shibuya','渋谷：ネオン路地、商店街、外周道路。'));$('mapIndustrial').addEventListener('click',()=>selectMap('mapIndustrial','industrial','ドックサイド：コンテナ列、倉庫、中央レーン、両側迂回路。'));$('mapSki').addEventListener('click',()=>selectMap('mapSki','village','GREYFIELD：南側の安全な出撃地点→中央広場→西側住宅路／東側農場路→北側の最終区画。遮蔽物と側面ルートを配置。'));selectMap('mapSki','village','GREYFIELD：南側の出撃地点、中央広場、西側住宅路、東側農場路、北側の最終区画。');$('mapForest').addEventListener('click',()=>selectMap('mapForest','forest','BLACKWOOD FOREST：夜の森。視界が悪く、木の陰に敵が潜む。'));$('mapCanyon').addEventListener('click',()=>selectMap('mapCanyon','canyon','REDRIDGE CANYON：高低差が激しい。尾根を取れば見通しが利くが、狙撃手にも狙われる。'));function beginMission(solo){if(started)return;if(!window.THREE){alert('3Dライブラリを読み込めません。インターネット接続を確認して、ページを再読み込みしてね。');return;}if(solo){if(net){try{net.close();}catch(e){}net=null;}netConnected=false;netRoom='';netId='';netRole='';remotePlayers.clear();netStatus('一人プレイ：サーバー接続なし／AI敵あり');}else if(!netConnected){netStatus('対人戦を始めるには、先に「部屋を作る」か「番号で参加」を押してね。ひとりで遊ぶ場合は緑の一人プレイボタン！');return;}try{init(selectedMap);started=true;$('overlay').style.display='none';$('hud').hidden=false;$('statusline').textContent=solo?'SOLO MISSION // AI HOSTILES ACTIVE':'ONLINE PVP // '+(selectedMap==='industrial'?'DOCKSIDE YARD':selectedMap==='village'?'GREYFIELD VILLAGE':'SHIBUYA SECTOR')+' // AI HOSTILES DISABLED';document.querySelector('#top .big').textContent=selectedMap==='industrial'?'SECTOR 07 — DOCKSIDE CONTAINER YARD':selectedMap==='village'?'SECTOR 09 — GREYFIELD RUINED VILLAGE':'SECTOR 04 — SHIBUYA BACKSTREETS';$('objective').textContent=solo?(selectedMap==='industrial'?'OBJECTIVE: CLEAR THE CONTAINER YARD':selectedMap==='village'?'OBJECTIVE: SECURE GREYFIELD':'OBJECTIVE: CLEAR THE BACKSTREETS'):'OBJECTIVE: ELIMINATE THE OTHER PLAYER';renderer.domElement.requestPointerLock();clock.start();animate();}catch(e){console.error(e);alert('ゲーム起動エラー：'+(e&&e.message?e.message:'不明なエラー')+'。ページを再読み込みしてもう一度試してね。');$('netStatus').textContent='起動エラー：'+(e&&e.message?e.message:'不明なエラー');}}$('soloStart').onclick=()=>beginMission(true);document.addEventListener('keydown',e=>{if(e.code==='Enter'&&!started&&e.target.tagName!=='INPUT')beginMission(true)});
+$('start').onclick=()=>{if(peerPresent&&netConnected){beginMission(false)}else{netStatus('対人戦は友達が同じ部屋に参加してから開始できます。ひとりで遊ぶ場合は緑の「プレイ開始」を押してね。');}};
+})();
+</script>
+</body></html>
